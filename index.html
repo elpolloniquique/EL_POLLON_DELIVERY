@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
 
@@ -19,7 +19,7 @@
   <meta name="description" content="Pollería en Iquique: pollo a la brasa, delivery rápido, combos familiares. El Pollón — pedidos online por WhatsApp.">
   <meta name="keywords" content="pollería en iquique, pollo delivery iquique, comida delivery iquique, el pollón iquique, pollo a la brasa iquique">
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#E50914">
+  <meta name="theme-color" content="#e10600">
   <meta property="og:title" content="Pollería El Pollón - Iquique - Delivery">
   <meta property="og:description" content="Pollo a la brasa premium en Iquique. Pide online con delivery a domicilio.">
   <meta property="og:image" content="https://elpolloniquique.github.io/EL-POLLON-/img/logo%20pollon.png">
@@ -61,6 +61,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/premium.css">
   <link rel="stylesheet" href="css/redesign.css">
+  <link rel="stylesheet" href="css/header-ref.css">
 </head>
 <body class="pollon-body">
 
@@ -71,101 +72,130 @@
     <div class="app-loader-bar" role="progressbar"></div>
   </div>
 
-  <!-- Header premium: negro + rojo (desktop) / rojo compacto (móvil) -->
-  <header class="header-fijo header-pollon">
-    <div class="header-pollon__top">
-      <div class="max-w-7xl 2xl:max-w-[1900px] mx-auto header-pollon__top-inner">
+  <!-- Header referencia: negro diagonal | nav blanco | acciones rojo diagonal -->
+  <header class="header-fijo header-pollon header-pollon--ref">
+    <button id="btn-retiros" type="button" class="pedido-link header-sr-only" aria-label="Retiros en local" tabindex="-1">Retiros</button>
+
+    <div class="header-pollon__shell">
+      <div class="header-pollon__brand">
         <a href="#inicio" class="header-logo header-logo-link" aria-label="Volver al inicio">
           <div class="logo">
-            <img src="img/logo pollon.png" alt="Logo Pollería El Pollón"
+            <img src="img/logo pollon.png" alt="Logo El Pollón"
                  onerror="this.src=''; this.alt='Logo no disponible'; this.style.display='none';">
           </div>
-          <div class="header-brand-text hidden sm:block">
-            <h1 class="header-titulo header-titulo-logo">El Pollón</h1>
-            <p class="header-sub">Sabor Peruano</p>
+          <div class="header-brand-text">
+            <h1 class="header-titulo header-titulo-logo">EL POLLÓN</h1>
+            <p class="header-sub"><span class="header-sub-dot">•</span> Sabor Peruano <span class="header-sub-dot">•</span></p>
           </div>
         </a>
+      </div>
 
-        <nav class="header-service-nav" aria-label="Servicios">
-          <button id="btn-delivery" class="header-service-link pedido-link" type="button">
-            <span class="header-service-icon" aria-hidden="true">🛵</span>
-            <span class="header-service-label">Delivery rápido</span>
-          </button>
-          <a href="#menu" class="header-service-link">
-            <span class="header-service-icon" aria-hidden="true">📱</span>
-            <span class="header-service-label">Pedidos online</span>
-          </a>
-          <button id="btn-reservas" class="header-service-link pedido-link" type="button">
-            <span class="header-service-icon" aria-hidden="true">📅</span>
-            <span class="header-service-label">Reservas fáciles</span>
-          </button>
-          <button id="btn-retiros" class="header-service-link pedido-link" type="button">
-            <span class="header-service-icon" aria-hidden="true">🛍️</span>
-            <span class="header-service-label">Retiros en local</span>
-          </button>
-        </nav>
+      <nav class="header-service-nav" aria-label="Servicios">
+        <button id="btn-delivery" class="header-service-link pedido-link" type="button">
+          <span class="header-service-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 17.5h8M5.5 15.5l1.5-5h9l2 5"/><path d="M7 10.5l1-3h7l2 3"/></svg>
+          </span>
+          <span class="header-service-label">Delivery Rápido</span>
+        </button>
+        <span class="header-nav-divider" aria-hidden="true"></span>
+        <a href="#menu" class="header-service-link header-service-link--active">
+          <span class="header-service-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </span>
+          <span class="header-service-label">Pedidos Online</span>
+        </a>
+        <span class="header-nav-divider" aria-hidden="true"></span>
+        <button id="btn-reservas" class="header-service-link pedido-link" type="button">
+          <span class="header-service-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <span class="header-service-label">Reservas Fáciles</span>
+        </button>
+        <span class="header-nav-divider" aria-hidden="true"></span>
+        <a href="#menu" class="header-service-link">
+          <span class="header-service-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </span>
+          <span class="header-service-label">Promociones Diarias</span>
+        </a>
+      </nav>
 
-        <div class="header-actions-desktop">
-          <a href="tel:+56986925310" class="header-phone-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            <span>+56 9 8692 5310</span>
-          </a>
-          <a href="login.html" class="header-login-link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span>Iniciar Sesión</span>
-          </a>
-          <button id="view-cart-desktop" class="btn-cart-pro header-btn-pedido" type="button">
-            <svg class="cart-icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            <span>Ver Mi Pedido</span>
-            <span id="cart-badge-desktop" class="cart-badge-pro">0</span>
+      <div class="header-pollon__actions header-actions-desktop">
+        <a href="tel:+56986925310" class="header-phone-link">
+          <span class="header-phone-circle" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </span>
+          <span class="header-phone-text">+56 9 8692 5310</span>
+        </a>
+        <a href="login.html" class="header-login-link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Iniciar Sesión</span>
+        </a>
+        <button id="view-cart-desktop" class="btn-cart-pro header-btn-pedido" type="button">
+          <svg class="cart-icon-svg header-cart-icon-red" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>Ver Mi Pedido</span>
+          <span id="cart-badge-desktop" class="cart-badge-pro">0</span>
+        </button>
+        <div class="header-hamburger menu-dd-wrap">
+          <button id="menu-dd-btn-mobile" type="button" class="menu-dd-btn header-menu-btn-pc" aria-expanded="false">
+            <span class="header-menu-circle" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </span>
+            <span class="menu-dd-top">MENÚ</span>
+            <span class="menu-dd-caret">▾</span>
           </button>
-          <div class="header-hamburger menu-dd-wrap">
-            <button id="menu-dd-btn-mobile" type="button" class="menu-dd-btn header-menu-btn-pc" aria-expanded="false">
-              <span class="menu-dd-top">MENÚ</span>
-              <span class="menu-dd-bottom">☰ <span class="menu-dd-caret">▾</span></span>
+          <div id="menu-dd-panel-mobile" class="menu-dd-panel hidden" role="menu">
+            <button id="menu-dd-cart-mobile" type="button" class="menu-dd-cart menu-dd-cart-pro">
+              <span class="menu-dd-cart-left">
+                <svg class="cart-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Ver Mi Pedido</span>
+              </span>
+              <span id="menu-dd-cart-badge" class="menu-dd-cart-badge cart-badge-pro">0</span>
             </button>
-            <div id="menu-dd-panel-mobile" class="menu-dd-panel hidden" role="menu">
-              <button id="menu-dd-cart-mobile" type="button" class="menu-dd-cart menu-dd-cart-pro">
-                <span class="menu-dd-cart-left">
-                  <svg class="cart-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                  <span>Ver Mi Pedido</span>
-                </span>
-                <span id="menu-dd-cart-badge" class="menu-dd-cart-badge cart-badge-pro">0</span>
-              </button>
-              <div class="menu-dd-divider"></div>
-              <button class="menu-dd-item" data-category="ofertas-familiares" type="button">👨‍👩‍👧‍👦 Ofertas Familiares</button>
-              <button class="menu-dd-item" data-category="ofertas-dos" type="button">👫 Ofertas para Dos</button>
-              <button class="menu-dd-item" data-category="ofertas-personales" type="button">🧑 Ofertas Personales</button>
-              <button class="menu-dd-item" data-category="platos-extras" type="button">🍽️ Platos Extras</button>
-              <button class="menu-dd-item" data-category="agregados" type="button">➕ Agregados</button>
-              <button class="menu-dd-item" data-category="bebidas" type="button">🥤 Bebidas</button>
-              <button class="menu-dd-item" data-category="descartables" type="button">🍴 Descartables</button>
-            </div>
+            <div class="menu-dd-divider"></div>
+            <button class="menu-dd-item" data-category="ofertas-familiares" type="button">👨‍👩‍👧‍👦 Ofertas Familiares</button>
+            <button class="menu-dd-item" data-category="ofertas-dos" type="button">👫 Ofertas para Dos</button>
+            <button class="menu-dd-item" data-category="ofertas-personales" type="button">🧑 Ofertas Personales</button>
+            <button class="menu-dd-item" data-category="platos-extras" type="button">🍽️ Platos Extras</button>
+            <button class="menu-dd-item" data-category="agregados" type="button">➕ Agregados</button>
+            <button class="menu-dd-item" data-category="bebidas" type="button">🥤 Bebidas</button>
+            <button class="menu-dd-item" data-category="descartables" type="button">🍴 Descartables</button>
           </div>
-        </div>
-
-        <div class="header-actions-mobile">
-          <button type="button" class="header-icon-btn" aria-label="Buscar en el menú"
-                  onclick="document.getElementById('menu-search')?.focus(); document.getElementById('menu')?.scrollIntoView({behavior:'smooth'})">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </button>
-          <a href="tel:+56986925310" class="header-icon-btn" aria-label="Llamar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </a>
-          <a href="login.html" class="header-icon-btn" aria-label="Iniciar sesión">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </a>
-          <button type="button" class="header-icon-btn header-icon-cart" aria-label="Ver carrito"
-                  onclick="document.getElementById('floating-cart')?.click()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          </button>
-          <button id="hamburger-btn" type="button" class="header-icon-btn header-hamburger-btn" aria-label="Abrir menú">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
         </div>
       </div>
     </div>
 
+    <div class="header-pollon__mobile">
+      <a href="#inicio" class="header-logo-mobile header-logo-link" aria-label="Inicio">
+        <div class="logo">
+          <img src="img/logo pollon.png" alt="El Pollón"
+               onerror="this.src=''; this.alt='Logo no disponible'; this.style.display='none';">
+        </div>
+      </a>
+      <div class="header-actions-mobile">
+        <button type="button" class="header-icon-btn" aria-label="Buscar en el menú"
+                onclick="document.getElementById('menu-search')?.focus(); document.getElementById('menu')?.scrollIntoView({behavior:'smooth'})">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <a href="tel:+56986925310" class="header-icon-btn" aria-label="Llamar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </a>
+        <a href="login.html" class="header-icon-btn" aria-label="Iniciar sesión">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <button type="button" class="header-icon-btn header-icon-cart" aria-label="Ver carrito"
+                onclick="document.getElementById('floating-cart')?.click()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </button>
+        <button id="hamburger-btn" type="button" class="header-icon-btn header-hamburger-btn" aria-label="Abrir menú" aria-expanded="false">
+          <span class="hamburger-lines">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <!-- Sidebar -->
@@ -218,6 +248,7 @@
         <button id="btn-delivery-sidebar" class="sidebar-service-item pedido-link" type="button" onclick="document.getElementById('btn-delivery')?.click()">🛵 Delivery rápido</button>
         <a href="#menu" class="sidebar-service-item">📱 Pedidos online</a>
         <button class="sidebar-service-item pedido-link" type="button" onclick="document.getElementById('btn-reservas')?.click()">📅 Reservas fáciles</button>
+        <button class="sidebar-service-item pedido-link" type="button" onclick="document.getElementById('btn-retiros')?.click()">🛍️ Retiros en local</button>
         <a href="#menu" class="sidebar-service-item">🏷️ Promociones diarias</a>
       </div>
 
@@ -253,7 +284,7 @@
       <div class="hero-premium-overlay">
         <div class="hero-premium-content">
           <p class="hero-script">Pollo a la brasa</p>
-          <h2 class="hero-premium-title">delivery en Iquique</h2>
+          <h2 class="hero-premium-title">DELIVERY EN IQUIQUE</h2>
           <p class="hero-premium-sub">Combos familiares, ofertas y el mejor sabor peruano — pide en minutos.</p>
           <button type="button" class="hero-premium-cta" onclick="document.getElementById('menu')?.scrollIntoView({behavior:'smooth'})">
             Ver menú y pedir

@@ -4,15 +4,16 @@
    ============================================================================= */
 
 :root {
-  --pollon-red: #E50914;
-  --pollon-red-dark: #8B0000;
-  --pollon-red-hover: #c40812;
-  --pollon-black: #050505;
-  --pollon-white: #FFFFFF;
-  --pollon-gray-bg: #F5F5F5;
+  --pollon-red: #e10600;
+  --pollon-red-dark: #8b0000;
+  --pollon-red-hover: #c00500;
+  --pollon-black: #0d0d0d;
+  --pollon-white: #ffffff;
+  --pollon-gray-bg: #f5f5f5;
   --pollon-gray-muted: #6b7280;
-  --pollon-orange: #FF8A00;
-  --pollon-gold: #FFC107;
+  --pollon-gray-dark: #1c1c1c;
+  --pollon-orange: #ff9800;
+  --pollon-gold: #f5c518;
   --pollon-radius: 12px;
   --pollon-radius-lg: 16px;
   --pollon-shadow: 0 4px 24px rgba(5, 5, 5, 0.08);
