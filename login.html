@@ -6,26 +6,109 @@
   <title>Iniciar sesión — Admin El Pollón</title>
   <link rel="icon" href="img/logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/redesign.css">
 </head>
-<body class="admin-body login-page">
-  <div class="login-card">
-    <img src="img/logo pollon.png" alt="El Pollón" width="64" height="64" style="display:block;margin:0 auto 1rem">
-    <h1 style="text-align:center">Panel Admin</h1>
-    <p style="text-align:center">Pollería El Pollón — acceso autorizado</p>
-    <p id="login-error" class="login-error"></p>
-    <form id="login-form">
-      <label for="login-email">Correo electrónico</label>
-      <input type="email" id="login-email" placeholder="admin@elpollon.cl" required autocomplete="username">
-      <label for="login-password">Contraseña</label>
-      <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-      <button type="submit" class="admin-btn admin-btn-primary" style="width:100%">Ingresar</button>
-    </form>
-    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem">
-      <a href="index.html" style="color:#f77f00">← Volver a la tienda</a>
-    </p>
-  </div>
+<body class="login-page-pollon">
+
+  <header class="login-header-pollon">
+    <div class="login-header-pollon__inner">
+      <a href="index.html" class="login-header-logo">
+        <img src="img/logo pollon.png" alt="El Pollón" width="48" height="48">
+      </a>
+      <nav class="login-header-nav" aria-label="Servicios">
+        <span class="login-header-nav-item">🛵 Delivery rápido</span>
+        <span class="login-header-nav-item">📱 Pedidos online</span>
+        <span class="login-header-nav-item">📅 Reservas fáciles</span>
+        <span class="login-header-nav-item">🏷️ Promociones</span>
+      </nav>
+      <div class="login-header-actions">
+        <a href="tel:+56986925310" class="login-header-phone">+56 9 8692 5310</a>
+        <a href="index.html" class="login-header-back">Volver a la tienda</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="login-main-pollon">
+    <div class="login-main-pollon__grid">
+      <!-- Formulario -->
+      <div class="login-form-panel">
+        <div class="login-card-pollon">
+          <h1 class="login-card-pollon__title">Iniciar sesión</h1>
+          <p class="login-card-pollon__sub">Panel de administración — acceso autorizado</p>
+          <p id="login-error" class="login-error"></p>
+          <form id="login-form" class="login-form-pollon">
+            <label for="login-email">Correo electrónico</label>
+            <input type="email" id="login-email" placeholder="admin@elpollon.cl" required autocomplete="username">
+            <label for="login-password">Contraseña</label>
+            <div class="login-password-wrap">
+              <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+              <button type="button" class="login-password-toggle" aria-label="Mostrar contraseña"
+                      onclick="var i=document.getElementById('login-password'); i.type=i.type==='password'?'text':'password'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <button type="submit" class="admin-btn admin-btn-primary login-submit-btn">Iniciar sesión</button>
+          </form>
+          <a href="index.html" class="login-back-link">← Volver a la página</a>
+        </div>
+      </div>
+
+      <!-- Panel visual -->
+      <div class="login-visual-panel" aria-hidden="false">
+        <div class="login-visual-content">
+          <p class="login-visual-welcome">Bienvenido a</p>
+          <h2 class="login-visual-brand">EL POLLÓN</h2>
+          <p class="login-visual-tagline">
+            El auténtico sabor del pollo a la brasa peruano. Gestiona pedidos, menú y operaciones desde un panel profesional.
+          </p>
+          <div class="login-visual-icons">
+            <span>🛵</span><span>📱</span><span>📅</span><span>🏷️</span>
+          </div>
+          <a href="index.html#menu" class="login-visual-cta">🔥 Ver promociones</a>
+          <p class="login-visual-social">★★★★★ Más de 1000 clientes satisfechos</p>
+        </div>
+        <div class="login-visual-image-wrap">
+          <img src="img/oferton con fideo.png" alt="" class="login-visual-image">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="login-footer-pollon">
+    <div class="login-footer-pollon__grid">
+      <div class="login-footer-brand">
+        <img src="img/logo pollon.png" alt="El Pollón" width="56" height="56">
+      </div>
+      <div>
+        <h4>Conócenos</h4>
+        <ul>
+          <li><a href="index.html#ubicacion">Locales</a></li>
+          <li><a href="index.html">Quiénes somos</a></li>
+          <li><a href="tel:+56986925310">Contacto</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Redes sociales</h4>
+        <div class="login-footer-social">
+          <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">ig</a>
+          <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">tt</a>
+        </div>
+      </div>
+      <div>
+        <h4>Nuestros productos</h4>
+        <ul>
+          <li><a href="index.html#menu">Promociones</a></li>
+          <li><a href="index.html#menu">Pollos clásicos</a></li>
+          <li><a href="index.html#menu">Combos familiares</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="login-footer-copy">© 2025 Pollería El Pollón — Iquique, Chile. Desarrollado con ❤️</p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase/config.js"></script>
