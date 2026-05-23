@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — El Pollón</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="img/logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div id="admin-loader" class="admin-loader"><p>Cargando panel…</p></div>
+
+  <div class="admin-layout">
+    <aside id="admin-sidebar" class="admin-sidebar">
+      <div class="admin-brand">
+        <img src="img/logo pollon.png" alt="">
+        <div>
+          <h1>El Pollón</h1>
+          <p>Administración</p>
+        </div>
+      </div>
+      <nav class="admin-nav" id="admin-nav"></nav>
+      <div class="admin-sidebar-footer">
+        <div class="admin-user" id="admin-user-info">—</div>
+        <button type="button" class="admin-btn-logout" id="admin-logout">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button type="button" class="admin-menu-toggle" id="admin-menu-toggle">☰</button>
+          <h2 id="admin-page-title">Dashboard</h2>
+        </div>
+        <button type="button" class="admin-btn admin-btn-ghost" id="admin-refresh">🔃 Actualizar</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section id="sec-dashboard" class="admin-panel-section active">
+        <div class="admin-stats" id="dash-stats"></div>
+        <div class="admin-charts">
+          <div class="admin-card"><h3>Ventas últimos 7 días</h3><canvas id="chart-ventas-dia" height="200"></canvas></div>
+          <div class="admin-card"><h3>Pedidos por estado</h3><canvas id="chart-estados" height="200"></canvas></div>
+        </div>
+        <div class="admin-card">
+          <h3>Productos más vendidos</h3>
+          <canvas id="chart-top-productos" height="180"></canvas>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section id="sec-pedidos" class="admin-panel-section">
+        <div class="admin-card">
+          <div style="display:flex;flex-wrap:gap:0.75rem;margin-bottom:1rem">
+            <input type="date" id="filtro-desde">
+            <input type="date" id="filtro-hasta">
+            <select id="filtro-estado">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="preparando">Preparando</option>
+              <option value="listo">Listo</option>
+              <option value="en_delivery">En delivery</option>
+              <option value="entregado">Entregado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <input type="search" id="filtro-buscar" placeholder="Buscar cliente o teléfono">
+            <button type="button" class="admin-btn admin-btn-primary" id="btn-export-csv">Exportar CSV</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Código</th><th>Cliente</th><th>Teléfono</th><th>Total</th><th>Estado</th><th>Fecha</th><th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="pedidos-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCTOS -->
+      <section id="sec-productos" class="admin-panel-section">
+        <div class="admin-card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+            <h3 style="margin:0">Productos</h3>
+            <button type="button" class="admin-btn admin-btn-primary" id="btn-nuevo-producto">+ Nuevo producto</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Imagen</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="productos-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CATEGORÍAS -->
+      <section id="sec-categorias" class="admin-panel-section">
+        <div class="admin-card">
+          <h3>Categorías</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Orden</th><th>Nombre</th><th>Slug</th><th>Activa</th></tr></thead>
+              <tbody id="categorias-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFIG -->
+      <section id="sec-config" class="admin-panel-section">
+        <div class="admin-card">
+          <h3>Configuración de tienda</h3>
+          <form id="form-config" class="admin-form-grid">
+            <div><label>Nombre tienda</label><input name="nombre_tienda" id="cfg-nombre"></div>
+            <div><label>Teléfono</label><input name="telefono" id="cfg-telefono"></div>
+            <div><label>WhatsApp (sin +)</label><input name="whatsapp" id="cfg-whatsapp"></div>
+            <div><label>Dirección</label><input name="direccion" id="cfg-direccion"></div>
+            <div><label>Horario</label><input name="horario" id="cfg-horario"></div>
+            <div><label>Mensaje clientes</label><textarea name="mensaje_cliente" id="cfg-mensaje" rows="2"></textarea></div>
+            <div><label><input type="checkbox" name="delivery_activo" id="cfg-delivery"> Delivery activo</label></div>
+            <div><label><input type="checkbox" name="reservas_activas" id="cfg-reservas"> Reservas activas</label></div>
+          </form>
+          <button type="button" class="admin-btn admin-btn-primary" id="btn-save-config" style="margin-top:1rem">Guardar configuración</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal producto -->
+  <div id="modal-producto" class="admin-modal">
+    <div class="admin-modal-box">
+      <h3 id="modal-producto-title">Producto</h3>
+      <form id="form-producto" class="admin-form-grid" style="margin-top:1rem">
+        <input type="hidden" id="prod-id">
+        <div><label>Nombre</label><input id="prod-nombre" required></div>
+        <div><label>Precio CLP</label><input type="number" id="prod-precio" required min="0"></div>
+        <div><label>Categoría</label><select id="prod-categoria"></select></div>
+        <div><label>Stock</label><input type="number" id="prod-stock" value="99"></div>
+        <div style="grid-column:1/-1"><label>Descripción</label><textarea id="prod-descripcion" rows="2"></textarea></div>
+        <div style="grid-column:1/-1"><label>URL imagen</label><input id="prod-imagen" placeholder="https://..."></div>
+        <div style="grid-column:1/-1"><label>Subir imagen</label><input type="file" id="prod-file" accept="image/*"></div>
+        <div><label><input type="checkbox" id="prod-disponible" checked> Disponible</label></div>
+        <div><label><input type="checkbox" id="prod-destacado"> Destacado</label></div>
+      </form>
+      <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+        <button type="button" class="admin-btn admin-btn-primary" id="btn-save-producto">Guardar</button>
+        <button type="button" class="admin-btn admin-btn-ghost" id="btn-close-producto">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="js/supabase/config.js"></script>
+  <script src="js/services/supabase-client.js"></script>
+  <script src="js/services/auth-service.js"></script>
+  <script src="js/services/orders-service.js"></script>
+  <script src="js/services/products-service.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/tickets.js"></script>
+  <script src="js/admin-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión — Admin El Pollón</title>
+  <link rel="icon" href="img/logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body login-page">
+  <div class="login-card">
+    <img src="img/logo pollon.png" alt="El Pollón" width="64" height="64" style="display:block;margin:0 auto 1rem">
+    <h1 style="text-align:center">Panel Admin</h1>
+    <p style="text-align:center">Pollería El Pollón — acceso autorizado</p>
+    <p id="login-error" class="login-error"></p>
+    <form id="login-form">
+      <label for="login-email">Correo electrónico</label>
+      <input type="email" id="login-email" placeholder="admin@elpollon.cl" required autocomplete="username">
+      <label for="login-password">Contraseña</label>
+      <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+      <button type="submit" class="admin-btn admin-btn-primary" style="width:100%">Ingresar</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.8rem">
+      <a href="index.html" style="color:#f77f00">← Volver a la tienda</a>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase/config.js"></script>
+  <script src="js/services/supabase-client.js"></script>
+  <script src="js/services/auth-service.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    (async function () {
+      const cfg = window.SUPABASE_CONFIG || {};
+      const emailInput = document.getElementById('login-email');
+      if (cfg.adminEmail) emailInput.value = cfg.adminEmail;
+
+      const ok = await window.PollonAuth.restoreSession();
+      if (ok?.activo) {
+        window.location.href = 'admin.html';
+        return;
+      }
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errEl = document.getElementById('login-error');
+        errEl.classList.remove('show');
+        const email = emailInput.value.trim();
+        const pass = document.getElementById('login-password').value;
+        let result;
+        if (window.PollonSupabase?.isConfigured?.()) {
+          result = await window.PollonAuth.signInAdmin(email, pass);
+        } else {
+          result = await window.PollonAuth.signInAdminPasswordOnly(pass);
+        }
+        if (result.ok) {
+          window.location.href = 'admin.html';
+        } else {
+          errEl.textContent = result.error || 'Credenciales incorrectas';
+          errEl.classList.add('show');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

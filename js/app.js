@@ -8,75 +8,22 @@ const CURRENCY = new Intl.NumberFormat('es-CL', {
 const BAG_PRICE = 200; // CLP
 const WHATSAPP_NUMBER = '56986925310';
 
-// ======================= FIREBASE CONFIGURACIÓN =========================
-// Realtime Database: los pedidos se guardan en la ruta "pollon_orders_v1".
-// Reglas obligatorias en Firebase Console > Realtime Database > Reglas:
-//   { "rules": { "pollon_orders_v1": { ".read": true, ".write": true } } }
-// Ver FIREBASE-BASE-DATOS.md para desplegar reglas y comprobar que todo funcione.
+// ======================= SUPABASE BACKEND =========================
+// Pedidos y menú vía Supabase (ver supabase/schema.sql y js/supabase/config.js)
 // -----------------------------------------------------------------------
-
-//esta con este nombre BD02pagina01 correo  usolibletrabajos@gmail.com
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDc4omnC9sxGUKEYjUVrJUxcG9RMiidkr4",
-//   authDomain: "pollonpagina01.firebaseapp.com",
-//   databaseURL: "https://pollonpagina01-default-rtdb.firebaseio.com",
-//   projectId: "pollonpagina01",
-//   storageBucket: "pollonpagina01.firebasestorage.app",
-//   messagingSenderId: "211369350355",
-//   appId: "1:211369350355:web:11d849533761780a5df026",
-//   measurementId: "G-NE5XP5N3VS"
-// };
-
-
-
-//  const firebaseConfig = {
-//   apiKey: "AIzaSyBD5r9imipixHA0bVhvNh4Oc-mjTXvuQ0E",
-//   authDomain: "bd03pagina01.firebaseapp.com",
-//   databaseURL: "https://bd03pagina01-default-rtdb.firebaseio.com",
-//   projectId: "bd03pagina01",
-//   storageBucket: "bd03pagina01.firebasestorage.app",
-//   messagingSenderId: "292447052053",
-//   appId: "1:292447052053:web:9d6cce4d6cfb5bcf7cc91c"
-// };
-
-
-   const firebaseConfig = {
-     apiKey: "AIzaSyB3QActmcrweop2S4Q26shBxc0ateIQiBw",
-     authDomain: "bd04pagina01.firebaseapp.com",
-     databaseURL: "https://bd04pagina01-default-rtdb.firebaseio.com/",
-     projectId: "bd04pagina01",
-     storageBucket: "bd04pagina01.firebasestorage.app",
-     messagingSenderId: "391487717972",
-     appId: "1:391487717972:web:2c290003bcd18bcff9e3c1"
-   };
-
-
-let ordersRef = null;
-let db = null;
-let rtdb = null;
-const ORDERS_PATH = 'pollon_orders_v1';
-let _ordersSnapshotInitialized = false;
-let useRealtimeDB = false;
 
 let orders = [];
 const ORDERS_KEY = 'pollon_orders_v1';
+let _ordersSnapshotInitialized = false;
 
-// Elimina undefined para Firestore
-function sanitizeForFirestore(obj) {
-  if (obj === null || typeof obj !== 'object') return obj;
-  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore).filter(v => v !== undefined);
-  const out = {};
-  for (const k of Object.keys(obj)) {
-    if (obj[k] === undefined) continue;
-    out[k] = sanitizeForFirestore(obj[k]);
-  }
-  return out;
-}
+window.onPollonOrdersSync = function (list) {
+  syncOrdersToList(list);
+};
 
 function syncOrdersToList(list) {
   const prevCount = orders.length;
   orders = list;
+  if (window.PollonOrders) window.PollonOrders.setOrders(list);
   orders.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
   if (_ordersSnapshotInitialized && list.length > prevCount && window.PollonAdmin?.isSoundEnabled?.()) {
     window.PollonAdmin.playOrderAlarm();
@@ -87,233 +34,58 @@ function syncOrdersToList(list) {
   }
 }
 
-// Inicializa Firebase: Realtime DB primero (más simple), luego Firestore
-function initOrdersBackend() {
-  try {
-    if (typeof firebase === 'undefined') {
-      loadOrdersFromLocal();
-      return;
-    }
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+function isBackendReady() {
+  return window.PollonOrders?.isBackendReady?.() || false;
+}
 
-    // 1) Realtime Database (databaseURL configurado = más fácil de usar)
-    if (firebase.database && firebaseConfig.databaseURL) {
-      try {
-        rtdb = firebase.database();
-        const ref = rtdb.ref(ORDERS_PATH);
-        ref.on('value', snapshot => {
-          const list = [];
-          const val = snapshot.val();
-          if (val && typeof val === 'object') {
-            Object.keys(val).forEach(key => {
-              const data = val[key];
-              if (data && typeof data === 'object') {
-                list.push({ id: key, ...data });
-              }
-            });
-          }
-          syncOrdersToList(list);
-        });
-        useRealtimeDB = true;
-        return;
-      } catch (rtErr) {
-        console.warn('Realtime DB no disponible:', rtErr);
-      }
+async function initOrdersBackend() {
+  if (window.PollonOrders) {
+    await window.PollonOrders.initOrdersBackend();
+    orders = window.PollonOrders.getOrders();
+  } else {
+    try {
+      const raw = localStorage.getItem(ORDERS_KEY);
+      orders = raw ? JSON.parse(raw) : [];
+    } catch (_) {
+      orders = [];
     }
-
-    // 2) Fallback: Firestore
-    initFirestore();
-  } catch (e) {
-    console.warn('Firebase init error:', e);
-    loadOrdersFromLocal();
   }
 }
 
-function initFirestore() {
-  try {
-    db = firebase.firestore();
-    ordersRef = db.collection(ORDERS_PATH);
-    ordersRef.orderBy('createdAt', 'asc').onSnapshot(
-      snapshot => {
-        const list = [];
-        snapshot.forEach(doc => {
-          list.push({ id: doc.id, ...(doc.data() || {}) });
-        });
-        syncOrdersToList(list);
-      },
-      err => {
-        console.warn('Firestore error:', err);
-        ordersRef = null;
-        db = null;
-        loadOrdersFromLocal();
-      }
-    );
-  } catch (e) {
-    console.warn('Firestore no disponible:', e);
-    loadOrdersFromLocal();
-  }
-}
-
-
-function loadOrdersFromLocal() {
-  try {
-    const raw = localStorage.getItem(ORDERS_KEY);
-    orders = raw ? JSON.parse(raw) : [];
-  } catch (_) {
-    orders = [];
-  }
-}
-
-// Agregar pedido (Firestore o Realtime DB). El id debe ser válido para Firebase (sin ., $, #, [, ], /).
 function addOrderToBackend(order) {
-  if (!order || !order.id) {
-    return Promise.reject(new Error('Pedido inválido: falta id'));
-  }
-  const safe = sanitizeForFirestore(order);
-
-  if (ordersRef && db && !useRealtimeDB) {
-    return ordersRef.doc(order.id).set(safe);
-  }
-
-  if (rtdb && useRealtimeDB) {
-    const ref = rtdb.ref(ORDERS_PATH).child(order.id);
-    return ref.set(safe);
-  }
-
+  if (window.PollonOrders) return window.PollonOrders.addOrderToBackend(order);
   return Promise.reject(new Error('Base de datos no disponible'));
 }
 
-// Actualizar pedido (estado, deliveredAt, etc.)
 function updateOrderInBackend(order) {
-  if (!order || !order.id) {
-    return Promise.reject(new Error('Pedido inválido: falta id'));
-  }
-  const safe = sanitizeForFirestore(order);
-  if (ordersRef && db && !useRealtimeDB) {
-    return ordersRef.doc(order.id).set(safe, { merge: true });
-  }
-  if (rtdb && useRealtimeDB) {
-    return rtdb.ref(ORDERS_PATH).child(order.id).set(safe);
-  }
+  if (window.PollonOrders) return window.PollonOrders.updateOrderInBackend(order);
   return Promise.reject(new Error('Base de datos no disponible'));
 }
 
 function saveOrders() {
-  if (ordersRef && db && !useRealtimeDB) {
-    const batch = db.batch();
-    orders.forEach(o => {
-      if (!o.id) o.id = 'P' + Date.now();
-      batch.set(ordersRef.doc(o.id), sanitizeForFirestore(o), { merge: true });
-    });
-    batch.commit().catch(err => {
-      console.error('Error guardando:', err);
-      showToast('Error al guardar. Intenta de nuevo.');
-    });
-  } else if (rtdb && useRealtimeDB) {
-    orders.forEach(o => {
-      if (!o.id) o.id = 'P' + Date.now();
-      rtdb.ref(ORDERS_PATH).child(o.id).set(sanitizeForFirestore(o));
-    });
-  } else {
-    try {
-      localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-    } catch (e) {
-      console.error('Error localStorage:', e);
-    }
+  if (window.PollonOrders) {
+    window.PollonOrders.setOrders(orders);
+    return window.PollonOrders.saveOrders();
   }
+  try {
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  } catch (e) {
+    console.error('Error localStorage:', e);
+  }
+  return Promise.resolve();
 }
 
 function loadOrders() {
-  if ((ordersRef && db) || (rtdb && useRealtimeDB)) return;
-  loadOrdersFromLocal();
+  if (isBackendReady()) return;
+  if (window.PollonOrders) window.PollonOrders.loadOrders();
+  orders = window.PollonOrders ? window.PollonOrders.getOrders() : orders;
 }
 
+// ===================== FIN CONFIG SUPABASE / BACKEND ====================
 
-// ===================== FIN CONFIG FIREBASE / BACKEND ====================
 
-
-const products = {
-  "ofertas-familiares": [
-    { name: "Oferton mas chaufa", description: "Pollo entero, papas fritas, arroz chaufa, ensalada y bebidas 1.5lt.", price: 25500, image: "img/ofertas familiares.png" },
-    { name: "Oferton c/ fideos al pesto + ensalada", description: "Pollo entero, papas fritas, fideos al pesto, ensalada y bebidas 1.5lt.", price: 25500, image: "img/todo el menu.png" },
-    { name: "Oferton con fideos al pesto pura papa", description: "Pollo entero, papas fritas, fideos al pesto, extra papa frita y bebida 1.5lt.", price: 25500, image: "" },
-    { name: "Oferton mas chaufa pura papa", description: "Pollo entero, papas fritas, extra papa frita, arroz chaufa y bebidas 1.5lt.", price: 25500, image: "img/oferton mas chaufa pura papa.png" },
-    { name: "Oferton c/ fideos al pesto", description: "Pollo entero, papas fritas, fideos al pesto y bebidas 1.5lt", price: 24500, image:"img/oferton con fideo.png" },
-    { name: "Oferton sin ensalada", description: "Pollo entero, papas fritas, arroz chaufa y bebidas 1.5lt", price: 24500, image: "img/oferton sin ensalada.png" },
-    { name: "Oferton pura papa", description: "Pollo entero, papas fritas, 1/2 porcion de papa frita y bebidas 1.5lt", price: 24500, image: "img/oferton pura papa.png" },
-    { name: "oferton familiar", description: "Pollo entero, papas fritas, ensalada y bebidas 1.5lt", price: 23500, image: "img/oferton familiar.png" },
-    { name: "Oferton solo ensalada", description: "Pollo entero, 2  ensaladas familiar y bebida 1.5lt.", price: 23500, image: "" }
-    
-  ],
-  "ofertas-dos": [
-    { name: "1/2 combo con fideo al pesto", description: "Medio pollo, papas fritas, fideos al pesto", price: 16800, image: "" },
-    { name: "1/2 combo chaufa", description: "Medio pollo, papas fritas, arroz chaufa", price: 16100, image: "img/medio combo chaufa.png" },
-    { name: "1/2 combo", description: "Medio pollo, papas fritas, ensalada personal", price: 15600, image: "img/medio combo.png" },
-    { name: "1/2 combo pura papa", description: "Medio pollo, papas fritas mas cantidad,", price: 15600, image: "img/medio combo pura papa.png" },
-    { name: "1/2 pollo solo ensalada", description: "Medio pollo, ensalada familiar", price: 15600, image: "" }
-  ],
-  "ofertas-personales": [
-    { name: "Chaufa brasa c/ papa + ensalada", description: "1/4 pollo, arroz chaufa, papas fritas personales y ensalada personal", price: 10500, image: "" },
-    { name: "1/4 combo", description: "1/4 pollo, papas fritas personales, ensalada personal", price: 8400, image: "img/personal combo.png" },
-    { name: "1/4 combo pura papa", description: "1/4 pollo, papas fritas personales mas cantidad.", price: 8400, image: "img/personal pura papa.png" },
-    { name: "Chaufa brasa", description: "1/4 pollo, arroz chaufa", price: 8500, image: "img/chaufa brasa.png" },
-    { name: "1/4 de pollo c/ fideos al pesto", description: "1/4 pollo, fideos al pesto", price: 8400, image: "img/personal pesto con pollo.png" },
-    { name: "Chaufa brasa c/ ensalada", description: "1/4 pollo, arroz chaufa y ensalada personal", price: 9500, image: "" },
-    { name: "Chaufa brasa c/ papa", description: "1/4 pollo, papas fritas personal, arroz chaufa", price: 9500, image: "img/chaufa brasa con papas fritas.png" },
-    { name: "1/4 de pollo c/ fideos + papa", description: "1/4 pollo, papas fritas, fideos al pesto", price: 9600, image: "img/personal con papa y fideo 01.png" },
-    { name: "1/4 de pollo solo ensalada", description: "1/4 pollo + 1 ensalada familiar", price: 8400, image: "" }
-  ],
-  "platos-extras": [
-    { name: "Lomo saltado de carne c/ chaufa", description: "", price: 12500, image: "img/lomo saltado con arroz chaufa.png" },
-    { name: "Saltado de pollo c/ arroz chaufa", description: "", price: 12500, image: "" },
-    { name: "Lomo saltado de carne con arroz blanco ", description: "", price: 12000, image: "img/lomo saltado de carne con arroz blanco.png" },
-    { name: "Lomo saltado de pollo con arroz blanco", description: "", price: 12000, image: "img/lomo saltado de pollo con arroz blanco.png" },
-    { name: "Tallarin saltado de carne", description: "", price: 12000, image: "img/tallarin saltado de carne 01.png" },
-    { name: "Tallarin saltado de pollo", description: "", price: 12000, image: "" },
-    { name: "Bistec a lo pobre", description: "", price: 11000, image: "img/bistec a lo pobre.png" },
-    { name: "Bistec a lo pobre c/ chaufa", description: "", price: 11300, image: "" },
-    { name: "Bistec con fideos al pesto", description: "", price: 11000, image: "" },
-    { name: "Chuleta de cerdo", description: "", price: 11000, image: "img/chuleta de cerdo.png" },
-    { name: "Chuleta de cerdo c/ chaufa", description: "", price: 11300, image: "" },
-    { name: "Pechuga a la plancha", description: "", price: 10500, image: "img/pechuga a la plancha.png" },
-    { name: "Combo nuggets", description: "", price: 7000, image: "img/nugget.png" },
-    { name: "Salchipapas", description: "", price: 7000, image: "img/salchipapa.png" }
-  ],
-  "agregados": [
-    { name: "1 Pollo entero solo", description: "1 pollo entero", price: 16000, image: "img/pollo solo.png" },
-    { name: "1/2 Pollo solo", description: " 1/2 pollo  -  parte truto y pechuga", price: 10400, image: "img/medio pollo solo.png" },
-    { name: "1/4 pollo solo", description: "1/4 de polo -- truto o pechuga ---segun el stock", price: 6100, image: "" },
-    { name: "Porcion de papas fritas familiar", description: "Porción grande de papas crujientes", price: 9500, image: "img/porcion de papa.png" },
-    { name: "1/2 porcion de papas fritas", description: "Media Porción  de papas crujientes", price: 6400, image: "img/media porcion papa.png" },
-    { name: "Porcion de arroz chaufa", description: "1 Porción de arroz chaufa", price: 5500, image: "img/porcion arroz chaufa.png" },
-    { name: "Porcion de fideos al pesto", description: "1 Porción de fideos al pesto", price: 5500, image: "img/porcion de fideo.png" },
-    { name: "Porcion de ensalada familiar", description: "Ensalada surtida - familiar ", price: 5700, image: "img/ensalada familiar.png" },
-    { name: "Porcion de ensalada personal", description: "Ensalada surtida - personal", price: 3800, image: "img/ensalada personal.png" }
-  ],
-
-  "bebidas": [
-    { name: "Coca Cola", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/coca cola.png" },
-    { name: "Coca Cola Cero", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/coca cola cero.png" },
-    { name: "Inca Kola", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/inca kola.png" },
-    { name: "Fanta", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/fanta.png" },
-    { name: "Sprite", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/sprite.png" },
-    { name: "Sprite Cero", description: "Bebida 1.5L (según stock).", price: 4000, image: "img/sprite cero.png" },
-    { name: "Agua Sin Gas", description: "Benedictino de 500 ml. (según stock).", price: 1200, image: "img/agua sin gas.png" },
-    { name: "Agua Con Gas", description: "Benedictino de 500 ml. (según stock).", price: 1200, image: "img/agua con gas.png" }
-  ],
-
-  "descartables": [
-    { name: "Aluza CT5", description: "Envase descartable Aluza CT5.", price: 300, image: "img/aluza ct5.png" },
-    { name: "Aluza CT3", description: "Envase descartable Aluza CT3.", price: 400, image: "img/aluza ct3.png" },
-    { name: "Tenedor descartable", description: "Tenedor y cuchillo plástico descartable.", price: 200, image: "img/servicio descartable.png" },
-    { name: "Bolsa ecológica", description: "Bolsa ecológica (unidad).", price: 200, image: "img/bolsa ecologica.png" },
-    { name: "Vaso descartable", description: "vaso de 10 oz (unidad).", price: 50, image: "img/vaso.png" }
-  ]
-
-};
-
+let products = window.POLLON_FALLBACK_PRODUCTS ? JSON.parse(JSON.stringify(window.POLLON_FALLBACK_PRODUCTS)) : {};
+let menuSearchTerm = '';
 
 const CATEGORY_META = {
   "ofertas-familiares": { title: "👨‍👩‍👧‍👦 Ofertas Familiares" },
@@ -485,35 +257,16 @@ function renderProductsSingle(category) {
 
   container.innerHTML = '';
 
-  (products[category] || []).forEach(p => {
-    // 🔥 Guardamos la categoría real dentro del producto:
-    const payload = { ...p, __category: category };
-
-    const card = document.createElement('div');
-    card.className = 'product-card bg-white rounded-lg shadow-lg overflow-hidden';
-    card.innerHTML = `
-      <img src="${p.image}" alt="${p.name}" class="product-image"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="h-48 bg-gradient-to-br from-orange-400 to-red-500 hidden items-center justify-center text-6xl">🍗</div>
-      <div class="p-4">
-        <h3 class="font-bold text-lg mb-2 text-red-900">${p.name}</h3>
-        <p class="text-gray-600 text-sm mb-3">${p.description || ''}</p>
-        <div class="flex justify-between items-center gap-2">
-          <span class="text-2xl font-bold text-red-700">${money(p.price)}</span>
-          <div class="product-card-actions flex items-center gap-2 flex-1 justify-end">
-            <span class="product-like-wrap">
-              <button type="button" class="product-like-btn" aria-label="Me gusta" title="Me gusta">
-                <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              </button>
-            </span>
-            <button class="add-to-cart px-4 py-2 rounded-lg font-bold text-white hover:opacity-90"
-                    style="background-color:#dc2626"
-                    data-product='${JSON.stringify(payload)}'>Agregar</button>
-          </div>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
+  const list = (products[category] || []).filter(productMatchesSearch);
+  if (!list.length) {
+    container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-12">No hay productos en esta categoría.</p>';
+    setActiveCategoryButton(category);
+    return;
+  }
+  list.forEach(p => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = buildProductCardHTML(p, category);
+    container.appendChild(wrap.firstElementChild);
   });
 
   setActiveCategoryButton(category);
@@ -549,34 +302,10 @@ function renderProductsAll() {
     `;
     container.appendChild(header);
 
-    list.forEach(p => {
-      const payload = { ...p, __category: catKey };
-
-      const card = document.createElement('div');
-      card.className = 'product-card bg-white rounded-lg shadow-lg overflow-hidden';
-      card.innerHTML = `
-        <img src="${p.image}" alt="${p.name}" class="product-image"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="h-48 bg-gradient-to-br from-orange-400 to-red-500 hidden items-center justify-center text-6xl">🍗</div>
-        <div class="p-4">
-          <h3 class="font-bold text-lg mb-2 text-red-900">${p.name}</h3>
-          <p class="text-gray-600 text-sm mb-3">${p.description || ''}</p>
-          <div class="flex justify-between items-center gap-2">
-            <span class="text-2xl font-bold text-red-700">${money(p.price)}</span>
-            <div class="product-card-actions flex items-center gap-2 flex-1 justify-end">
-              <span class="product-like-wrap">
-                <button type="button" class="product-like-btn" aria-label="Me gusta" title="Me gusta">
-                  <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                </button>
-              </span>
-              <button class="add-to-cart px-4 py-2 rounded-lg font-bold text-white hover:opacity-90"
-                      style="background-color:#dc2626"
-                      data-product='${JSON.stringify(payload)}'>Agregar</button>
-            </div>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
+    list.filter(productMatchesSearch).forEach(p => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = buildProductCardHTML(p, catKey);
+      container.appendChild(wrap.firstElementChild);
     });
   });
 
@@ -946,7 +675,13 @@ document.addEventListener('click', (e) => {
 
   // abrir modal opciones
   if (e.target.classList.contains('add-to-cart')) {
-  const parsed = JSON.parse(e.target.dataset.product);
+  const rawProduct = e.target.getAttribute('data-product') || e.target.dataset.product || '';
+  let parsed;
+  try {
+    parsed = JSON.parse(decodeURIComponent(rawProduct));
+  } catch (_) {
+    parsed = JSON.parse(rawProduct);
+  }
 
   // ✅ clave: si viene desde "Todo el menú", toma su categoría real
   currentCategory = parsed.__category || currentCategory;
@@ -1137,19 +872,7 @@ document.addEventListener('click', (e) => {
     if (chm) chm.classList.remove('active');
   }
 
-  // ADMIN open btn
-  if (e.target.id === 'admin-open-btn' || (e.target.closest && e.target.closest('#admin-open-btn'))) {
-    if (!isAdminAuthenticated) {
-      const lm = document.getElementById('admin-login-modal');
-      if (lm) lm.classList.add('active');
-      const err = document.getElementById('admin-login-error');
-      if (err) err.classList.add('hidden');
-    } else {
-      openAdminPanelModal();
-    }
-  }
-
-  // ADMIN login
+  // ADMIN login (modal legacy en index — el panel principal está en admin.html)
   if (e.target.id === 'admin-login-cancel') {
     const lm = document.getElementById('admin-login-modal');
     if (lm) lm.classList.remove('active');
@@ -1158,15 +881,20 @@ document.addEventListener('click', (e) => {
     const passInput = document.getElementById('admin-password');
     const err = document.getElementById('admin-login-error');
     const val = (passInput.value || '').trim();
-    if (val === 'HUILLCA123') {
-      isAdminAuthenticated = true;
-      if (err) err.classList.add('hidden');
-      const lm = document.getElementById('admin-login-modal');
-      if (lm) lm.classList.remove('active');
-      showToast('✅ Acceso concedido al panel de administración.');
-      openAdminPanelModal();
+    const doLogin = (ok) => {
+      if (ok) {
+        isAdminAuthenticated = true;
+        if (err) err.classList.add('hidden');
+        const lm = document.getElementById('admin-login-modal');
+        if (lm) lm.classList.remove('active');
+        showToast('✅ Acceso concedido al panel de administración.');
+        openAdminPanelModal();
+      } else if (err) err.classList.remove('hidden');
+    };
+    if (window.PollonAuth) {
+      window.PollonAuth.signInAdmin(val).then(r => doLogin(r.ok)).catch(() => doLogin(false));
     } else {
-      if (err) err.classList.remove('hidden');
+      doLogin(val === (window.SUPABASE_CONFIG?.legacyAdminPassword || 'HUILLCA123'));
     }
   }
 
@@ -1261,7 +989,7 @@ document.addEventListener('click', (e) => {
       if (nuevo === 'Entregado' && !order.deliveredAt) {
         order.deliveredAt = new Date().toISOString();
       }
-      if ((ordersRef && db) || (rtdb && useRealtimeDB)) {
+      if (isBackendReady()) {
         updateOrderInBackend(order).then(() => {
           renderAdminPanel();
           showToast(`Estado actualizado a: ${nuevo}`);
@@ -1352,19 +1080,22 @@ if (checkoutForm) {
 
     // Número de ticket correlativo (001, 002, ...). Si la BD no ha cargado aún, se usa al menos 1.
     const ticketNumber = String(Math.max(1, orders.length + 1)).padStart(3, "0");
+    const codigo_pedido = ticketNumber;
 
     const order = {
       id: 'P' + Date.now(),
       createdAt: new Date().toISOString(),
       ticketNumber,
+      codigo_pedido,
       customer: { name, address, phone, ...(comments ? { comments } : {}) },
       items: itemsForOrder,
       total,
       status: 'Pendiente',
-      deliveredAt: null
+      deliveredAt: null,
+      orderType: window.pollonOrderType || 'delivery'
     };
 
-    if ((ordersRef && db) || (rtdb && useRealtimeDB)) {
+    if (isBackendReady()) {
       addOrderToBackend(order)
         .then(() => {
           orders.push(order);
@@ -1392,7 +1123,7 @@ if (checkoutForm) {
           if (document.getElementById('admin-panel-modal')?.classList.contains('active')) {
             renderAdminPanel();
           }
-          showToast('⚠️ Pedido enviado a WhatsApp. Guardado localmente (revisa reglas de Firebase).');
+          showToast('⚠️ Pedido enviado a WhatsApp. Guardado localmente (revisa Supabase en js/supabase/config.js).');
         });
     } else {
       orders.push(order);
@@ -1814,13 +1545,88 @@ if (menuDdBtnMobile && menuDdPanelMobile){
 
 
 // --------- Inicio ---------
-initOrdersBackend();   // inicializa Firebase + Firestore + suscripción en tiempo real
-loadOrders();          // respaldo local en caso de que falle Firestore
-// renderProducts('ofertas-familiares');
-renderProductsAll();
-currentCategory = 'todo-el-menu';
-buildSidebarGallery();
+function hideAppLoader() {
+  const loader = document.getElementById('app-loader');
+  if (loader) {
+    loader.classList.add('app-loader--hide');
+    setTimeout(() => loader.remove(), 500);
+  }
+}
 
+function productMatchesSearch(p) {
+  if (!menuSearchTerm) return true;
+  const t = menuSearchTerm.toLowerCase();
+  const hay = [p.name, p.description, ...(p.tags || [])].join(' ').toLowerCase();
+  return hay.includes(t);
+}
 
-updateCartUI();
+function buildProductCardHTML(p, category) {
+  const payload = { ...p, __category: category };
+  const promo = p.promotion ? `<span class="product-badge-promo">Promo</span>` : '';
+  const popular = (p.popularity || 0) >= 8 ? `<span class="product-badge-popular">Popular</span>` : '';
+  const imgSrc = p.image || '';
+  const unavailable = p.available === false || (p.stock != null && p.stock <= 0);
+  return `
+    <div class="product-card product-card-premium ${unavailable ? 'product-card--unavailable' : ''}">
+      <div class="product-card-media">
+        ${promo}${popular}
+        <img src="${imgSrc}" alt="${p.name}" class="product-image" loading="lazy" decoding="async"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="product-image-fallback hidden items-center justify-center text-6xl">🍗</div>
+      </div>
+      <div class="p-4 product-card-body">
+        <h3 class="font-bold text-lg mb-2 text-red-900">${p.name}</h3>
+        <p class="text-gray-600 text-sm mb-3 line-clamp-2">${p.description || ''}</p>
+        <div class="flex justify-between items-center gap-2">
+          <span class="text-2xl font-bold text-red-700">${money(p.price)}</span>
+          <div class="product-card-actions flex items-center gap-2 flex-1 justify-end">
+            <span class="product-like-wrap">
+              <button type="button" class="product-like-btn" aria-label="Me gusta" title="Me gusta">
+                <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+            </span>
+            <button class="add-to-cart btn-add-premium ${unavailable ? 'opacity-50 pointer-events-none' : ''}"
+                    data-product="${encodeURIComponent(JSON.stringify(payload))}"
+                    ${unavailable ? 'disabled' : ''}>Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function bootstrapApp() {
+  await initOrdersBackend();
+  loadOrders();
+  if (window.PollonProducts) {
+    const result = await window.PollonProducts.loadProducts();
+    products = result.products || products;
+    const src = window.PollonProducts.getSource();
+    if (src === 'supabase') console.info('[Pollón] Menú cargado desde Supabase');
+  }
+  renderProductsAll();
+  currentCategory = 'todo-el-menu';
+  buildSidebarGallery();
+  updateCartUI();
+  hideAppLoader();
+
+  const searchInput = document.getElementById('menu-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      menuSearchTerm = (e.target.value || '').trim();
+      if (currentCategory === 'todo-el-menu') renderProductsAll();
+      else renderProductsSingle(currentCategory);
+    });
+  }
+
+  const themeBtn = document.getElementById('admin-theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      document.getElementById('admin-panel-modal')?.classList.toggle('admin-dark');
+      themeBtn.textContent = document.getElementById('admin-panel-modal')?.classList.contains('admin-dark')
+        ? '☀️ Modo claro' : '🌙 Modo oscuro';
+    });
+  }
+}
+
+bootstrapApp();
 
