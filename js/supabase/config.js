@@ -1,11 +1,12 @@
 /**
- * Configuración Supabase — valores PÚBLICOS (seguro para GitHub)
- * Tus claves reales van en config.local.js (ese archivo NO se sube a GitHub)
+ * ✅ ESTE ARCHIVO SÍ SE SUBE A GITHUB
+ * URL + anonKey son públicos (necesarios para la web online).
+ * La contraseña NUNCA va aquí — solo en config.local.js
  */
 window.SUPABASE_CONFIG = {
-  url: 'TU_SUPABASE_URL',
-  anonKey: 'TU_SUPABASE_ANON_KEY',
-  adminEmail: 'tu-correo@gmail.com',
+  url: 'https://xydsjbpstrihdgqinyco.supabase.co',
+  anonKey: 'sb_publishable_JKpdh8g9QNA4HIzvNr-z_g_W74lU5mm',
+  adminEmail: 'tutacanehuillca@gmail.com',
   legacyAdminPassword: '',
   storageBucket: 'product-images'
 };
