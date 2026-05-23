@@ -277,6 +277,29 @@ body.admin-body {
 .login-error { color: #f87171; font-size: 0.8rem; margin-bottom: 1rem; display: none; }
 .login-error.show { display: block; }
 
+/* Botón alarma — sección Pedidos */
+.admin-alarm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  border: 1px solid var(--admin-border);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.admin-alarm-btn:hover {
+  transform: translateY(-1px);
+}
+.admin-alarm-btn--off {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--admin-muted);
+}
+.admin-alarm-btn--on {
+  background: linear-gradient(135deg, rgba(214, 40, 40, 0.35), rgba(247, 127, 0, 0.25));
+  border-color: rgba(247, 127, 0, 0.45);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(247, 127, 0, 0.2);
+}
+
 .pollon-toast {
   position: fixed;
   bottom: 1.5rem;

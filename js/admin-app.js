@@ -9,6 +9,8 @@
   let orders = [];
   let categorias = [];
   let productos = [];
+  let _knownOrderIds = new Set();
+  let _ordersAlarmReady = false;
 
   const NAV = [
     { id: 'dashboard', label: '📊 Dashboard', perm: 'dashboard', title: 'Dashboard' },
@@ -320,8 +322,22 @@
     document.getElementById('admin-sidebar')?.classList.remove('open');
   }
 
+  function checkNewOrdersAlarm() {
+    if (!_ordersAlarmReady) {
+      _knownOrderIds = new Set(orders.map(o => o.id));
+      _ordersAlarmReady = true;
+      return;
+    }
+    const hasNew = orders.some(o => o.id && !_knownOrderIds.has(o.id));
+    _knownOrderIds = new Set(orders.map(o => o.id));
+    if (hasNew && window.PollonAdmin?.isSoundEnabled?.()) {
+      window.PollonAdmin.playOrderAlarm();
+    }
+  }
+
   async function refresh() {
     await loadOrders();
+    checkNewOrdersAlarm();
     renderDashboard();
     renderPedidos();
     if (Auth.can('products')) {

@@ -67,6 +67,14 @@
               <option value="cancelado">Cancelado</option>
             </select>
             <input type="search" id="filtro-buscar" placeholder="Buscar cliente o teléfono">
+            <button type="button"
+                    id="admin-alarm-toggle"
+                    class="admin-btn admin-alarm-btn admin-alarm-btn--off"
+                    data-pollon-alarm-toggle
+                    aria-pressed="false"
+                    title="Suena 2 segundos cuando llega un pedido nuevo">
+              🔕 Activar alarma
+            </button>
             <button type="button" class="admin-btn admin-btn-primary" id="btn-export-csv">Exportar CSV</button>
           </div>
           <div class="admin-table-wrap">
@@ -167,6 +175,7 @@
   <script src="js/utils.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/tickets.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/admin-app.js"></script>
 </body>
 </html>
