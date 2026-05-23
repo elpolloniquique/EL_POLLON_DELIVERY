@@ -10,3 +10,6 @@ window.SUPABASE_CONFIG = {
   legacyAdminPassword: '',
   storageBucket: 'product-images'
 };
+ 
+
+//SUBIR ESTE ARCHIVO A GITHUB, 
