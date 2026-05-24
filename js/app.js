@@ -1527,6 +1527,12 @@ function ensureMenuDdPanelPortal() {
   document.body.appendChild(menuDdPanelMobile);
 }
 
+function getMenuDdPanelWidth() {
+  if (window.matchMedia('(min-width: 1367px)').matches) return 300;
+  if (window.matchMedia('(min-width: 768px)').matches) return 340;
+  return 280;
+}
+
 function positionMenuDdPanel() {
   if (!menuDdBtnMobile || !menuDdPanelMobile) return;
   if (menuDdPanelMobile.classList.contains('hidden')) return;
@@ -1534,7 +1540,7 @@ function positionMenuDdPanel() {
   ensureMenuDdPanelPortal();
 
   const btnRect = menuDdBtnMobile.getBoundingClientRect();
-  const panelWidth = 300;
+  const panelWidth = getMenuDdPanelWidth();
 
   menuDdPanelMobile.style.position = 'fixed';
   menuDdPanelMobile.style.top = `${Math.round(btnRect.bottom + 10)}px`;
@@ -1628,18 +1634,33 @@ if (menuDdBtnMobile && menuDdPanelMobile) {
   // click en categorías
   menuDdPanelMobile.addEventListener('click', (e) => {
     const item = e.target.closest('.menu-dd-item');
-    if (!item) return;
+    if (item) {
+      const cat = item.dataset.category;
+      if (!cat) return;
 
-    const cat = item.dataset.category;
-    if (!cat) return;
+      renderProductsSingle(cat);
+      closeMenuDdMobile();
 
-    renderProductsSingle(cat);
+      requestAnimationFrame(() => {
+        document.getElementById('products-container')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return;
+    }
+
+    const serviceTile = e.target.closest('.menu-dd-service-tile');
+    if (!serviceTile) return;
+
+    e.preventDefault();
+    const service = serviceTile.dataset.service;
+    if (service === 'delivery') {
+      document.getElementById('btn-delivery')?.click();
+    } else if (service === 'reservas') {
+      document.getElementById('btn-reservas')?.click();
+    } else if (service === 'pedidos' || service === 'promos') {
+      document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     closeMenuDdMobile();
-
-    requestAnimationFrame(() => {
-      document.getElementById('products-container')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
   });
 
   // click en "Ver Mi Pedido"

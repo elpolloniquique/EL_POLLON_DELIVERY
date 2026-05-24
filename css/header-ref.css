@@ -624,6 +624,11 @@ body.pollon-body {
   display: none;
 }
 
+/* Cuadrícula servicios en dropdown: oculta por defecto */
+.header-pollon--ref .menu-dd-panel--pc .menu-dd-services {
+  display: none;
+}
+
 /* Dropdown panel */
 .header-pollon--ref .menu-dd-panel {
   background: var(--pollon-white);
@@ -1188,6 +1193,70 @@ body.pollon-body {
   .header-pollon--ref .header-hamburger.menu-dd-wrap {
     display: block !important;
   }
+
+  /* Panel dropdown más ancho en compacto */
+  .header-pollon--ref #menu-dd-panel-mobile.menu-dd-panel--pc {
+    min-width: 320px;
+    max-width: 340px;
+    padding-bottom: 0.5rem;
+  }
+
+  .header-pollon--ref .menu-dd-panel--pc .menu-dd-services {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.65rem;
+    margin-top: 0.15rem;
+    border-top: 1px solid #eeeeee;
+  }
+
+  .header-pollon--ref .menu-dd-service-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 72px;
+    padding: 0.65rem 0.4rem;
+    background: #f3f3f3;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--pollon-black);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+
+  .header-pollon--ref .menu-dd-service-tile:hover {
+    background: #ebebeb;
+    color: var(--pollon-red);
+    transform: translateY(-1px);
+  }
+
+  .header-pollon--ref .menu-dd-service-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+  }
+
+  .header-pollon--ref .menu-dd-service-icon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--pollon-red);
+    stroke: var(--pollon-red);
+  }
+
+  .header-pollon--ref .menu-dd-service-label {
+    display: block;
+    max-width: 100%;
+  }
 }
 
 /* Tablet estrecha (768–833): solo icono de teléfono */
@@ -1242,6 +1311,10 @@ body.pollon-body {
    Negro | Blanco | Rojo con cortes diagonales
    ============================================================================= */
 @media (min-width: 1367px) {
+  .header-pollon--ref .menu-dd-panel--pc .menu-dd-services {
+    display: none !important;
+  }
+
   .header-pollon__shell,
   .header-pollon--ref {
     overflow: visible;
