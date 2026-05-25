@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://elpolloniquique.github.io/EL-POLLON-/sitemap.xml
+Sitemap: https://elpolloniquique.github.io/El-Pollon-Iquique_Delivery-/sitemap.xml
