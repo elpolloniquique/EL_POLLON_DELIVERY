@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-gray-50 text-pollon-black font-sans;
+  }
+
+  .dark body,
+  body.dark,
+  html.dark body {
+    @apply bg-pollon-black text-white;
+  }
+}
+
+@layer components {
+  .app-container {
+    @apply max-w-lg mx-auto min-h-screen pb-24 relative;
+  }
+
+  .btn-primary {
+    @apply bg-pollon-red hover:bg-pollon-red-hover text-white font-semibold
+      py-3 px-6 rounded-2xl shadow-float transition-all active:scale-[0.98]
+      disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply bg-white dark:bg-[#1c1c1c] border border-gray-200 dark:border-gray-700
+      text-pollon-black dark:text-white font-medium py-3 px-6 rounded-2xl
+      transition-all active:scale-[0.98];
+  }
+
+  .card {
+    @apply bg-white dark:bg-[#1c1c1c] rounded-3xl shadow-card overflow-hidden
+      border border-gray-100 dark:border-gray-800;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700
+      bg-white dark:bg-[#1c1c1c] text-pollon-black dark:text-white
+      focus:outline-none focus:ring-2 focus:ring-pollon-red/40 transition;
+  }
+
+  .admin-input {
+    @apply w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+      bg-white dark:bg-[#252525] text-sm focus:outline-none focus:ring-2 focus:ring-pollon-red/30;
+  }
+}
+
+/* Safe area para iPhone */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Scrollbar oculto en tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
