@@ -1,7 +1,0 @@
-# Pollería El Pollón — https://elpolloniquique.github.io/El-Pollon-Iquique_Delivery-/
-User-agent: *
-Allow: /
-Disallow: /admin.html
-Disallow: /login.html
-
-Sitemap: https://elpolloniquique.github.io/El-Pollon-Iquique_Delivery-/sitemap.xml
