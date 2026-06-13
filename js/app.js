@@ -1,12 +1,48 @@
-// --------- Config ----------
+// --------- Config (desde config/*.js) ----------
+function getAppConfig() {
+  return window.POLLON_CONFIG || {};
+}
+
+function getCfgOptions() {
+  return getAppConfig().options || {};
+}
+
+function getCfgWhatsapp() {
+  return getAppConfig().whatsapp || {};
+}
+
+function getCfgTexts() {
+  return getAppConfig().texts || {};
+}
 
 const CURRENCY = new Intl.NumberFormat('es-CL', {
   style: 'currency',
   currency: 'CLP',
   maximumFractionDigits: 0
 });
-const BAG_PRICE = 200; // CLP
-const WHATSAPP_NUMBER = '56986925310';
+
+function getBagPrice() {
+  return getCfgOptions().bagPrice ?? 200;
+}
+
+function getWhatsappNumber() {
+  return getCfgWhatsapp().ordersNumber || '56986925310';
+}
+
+function getCategoryMeta() {
+  if (window.PollonConfig?.getCategoryMeta) return window.PollonConfig.getCategoryMeta();
+  return {};
+}
+
+function getCategoryOrder() {
+  if (window.PollonConfig?.getCategoryOrder) return window.PollonConfig.getCategoryOrder();
+  return [];
+}
+
+let CATEGORY_META = getCategoryMeta();
+let CATEGORY_ORDER = getCategoryOrder();
+const BAG_PRICE = getBagPrice();
+const WHATSAPP_NUMBER = getWhatsappNumber();
 
 // ======================= SUPABASE BACKEND =========================
 // Pedidos y menú vía Supabase (ver supabase/schema.sql y js/supabase/config.js)
@@ -87,27 +123,10 @@ function loadOrders() {
 let products = window.POLLON_FALLBACK_PRODUCTS ? JSON.parse(JSON.stringify(window.POLLON_FALLBACK_PRODUCTS)) : {};
 let menuSearchTerm = '';
 
-const CATEGORY_META = {
-  "ofertas-familiares": { title: "👨‍👩‍👧‍👦 Ofertas Familiares" },
-  "ofertas-dos":        { title: "👫 Ofertas para Dos" },
-  "ofertas-personales": { title: "🧑 Ofertas Personales" },
-  "platos-extras":      { title: "🍽️ Platos Extras" },
-  "agregados":          { title: "➕ Agregados" },
-  "bebidas":           { title: "🥤 Bebidas" },
-  "descartables":      { title: "🍴 Descartables" }
-
-};
-
-const CATEGORY_ORDER = [
-  "ofertas-familiares",
-  "ofertas-dos",
-  "ofertas-personales",
-  "platos-extras",
-  "agregados",
-  "bebidas",
-  "descartables"
-
-];
+function refreshCategoryConfig() {
+  CATEGORY_META = getCategoryMeta();
+  CATEGORY_ORDER = getCategoryOrder();
+}
 
 
 
@@ -186,7 +205,10 @@ function buildWhatsappTextFromOrder(order) {
   let msg = "";
 
   // CABECERA
-  msg += `◆ DELIVERY - POLLERÍA EL POLLÓN ◆\n\n`;
+  const waCfg = getCfgWhatsapp();
+  const deliveryCfg = getAppConfig().delivery || {};
+  const costNote = deliveryCfg.costNote || '$2.500 a $4.000';
+  msg += `${waCfg.orderHeader || '◆ DELIVERY - POLLERÍA EL POLLÓN ◆'}\n\n`;
   msg += `${ticket}    ${fechaStr}    ${horaStr}\n`;
   msg += `────────────────────────────────\n`;
   msg += `◆ DATOS DEL CLIENTE\n`;
@@ -219,7 +241,7 @@ function buildWhatsappTextFromOrder(order) {
       msg += `— Bebida: ${it.drink}\n`;
     }
     if ((it.bagQty || 0) > 0) {
-      msg += `— Bolsa: x ${it.bagQty} (+ ${money(BAG_PRICE)} /u)\n`;
+      msg += `— Bolsa: x ${it.bagQty} (+ ${money(getBagPrice())} /u)\n`;
     }
     msg += `\n`;
   });
@@ -230,8 +252,7 @@ function buildWhatsappTextFromOrder(order) {
   msg += `────────────────────────────────\n\n`;
 
   // NOTA DELIVERY
-  msg += `◆ Delivery tiene costo adicional\n`;
-  msg += `◆ segun la distancia $2.500 a $4.000`;
+  msg += waCfg.deliveryNote || `◆ Delivery tiene costo adicional\n◆ segun la distancia ${costNote}`;
 
   return msg;
 }
@@ -246,6 +267,37 @@ document.querySelectorAll('.sidebar-category').forEach(btn => {
     document.querySelector('#products-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 });
+
+/** Delegación para categorías reconstruidas por config-loader */
+function bindSidebarCategoryNav() {
+  const sidebar = document.getElementById('sidebar-menu');
+  if (!sidebar || sidebar.dataset.catNavBound) return;
+  sidebar.dataset.catNavBound = '1';
+  sidebar.addEventListener('click', (e) => {
+    const btn = e.target.closest('.sidebar-category');
+    if (!btn) return;
+    const cat = btn.dataset.category;
+    if (!cat) return;
+    renderProductsSingle(cat);
+    closeSidebarMenu();
+    document.querySelector('#products-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function bindDesktopMenuNav() {
+  const overlay = document.getElementById('desktop-menu-overlay');
+  if (!overlay || overlay.dataset.menuNavBound) return;
+  overlay.dataset.menuNavBound = '1';
+  overlay.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-category]');
+    if (!btn || !overlay.contains(btn)) return;
+    const cat = btn.dataset.category;
+    if (!cat) return;
+    renderProductsSingle(cat);
+    overlay.classList.add('hidden');
+    document.getElementById('products-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
 
 
 // Render normal: UNA categoría
@@ -351,7 +403,7 @@ function renderCart() {
   let total = 0;
   wrap.innerHTML = cart.map((it, i) => {
     total += it.total;
-    const bagLine = it.bagQty > 0 ? `♻️ Bolsa Ecológica: x ${it.bagQty} (+ ${money(BAG_PRICE)} c/u)` : '';
+    const bagLine = it.bagQty > 0 ? `♻️ Bolsa Ecológica: x ${it.bagQty} (+ ${money(getBagPrice())} c/u)` : '';
     const drinkLine = it.drink ? `🥤 Bebida: ${it.drink}` : '';
     return `
       <div class="flex justify-between items-center mb-4 pb-4 border-b">
@@ -380,48 +432,48 @@ function paintBagOptions() {
   const note = document.getElementById('bag-note');
   if (!badge || !opts || !note) return;
 
-    // ✅ En Bebidas y Descartables NO se usa bolsa
+  const optCfg = getCfgOptions();
+  const bagRules = optCfg.bagRules || {};
+  const rule = bagRules[currentCategory] || {};
   const bagSection = document.getElementById('bag-section');
-  if (currentCategory === 'bebidas' || currentCategory === 'descartables') {
+  const noBagCats = optCfg.noBagCategories || ['bebidas', 'descartables'];
+  const bagPrice = getBagPrice();
+  const m = optCfg.modal || {};
+
+  if (rule.hidden || noBagCats.includes(currentCategory)) {
     bagChoice = 'none';
     if (bagSection) bagSection.classList.add('hidden');
     return;
-  } else {
-    if (bagSection) bagSection.classList.remove('hidden');
   }
-
+  if (bagSection) bagSection.classList.remove('hidden');
 
   opts.innerHTML = '';
   note.textContent = '';
   bagChoice = null;
 
-  const isFamiliares = currentCategory === 'ofertas-familiares';
-  const isOtherMandatory = ['ofertas-dos', 'ofertas-personales', 'platos-extras'].includes(currentCategory);
-  const isAgregados = currentCategory === 'agregados';
-
-  if (isFamiliares || isOtherMandatory) {
+  if (rule.required) {
     badge.textContent = 'Obligatorio';
     badge.className = 'text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold';
     opts.innerHTML = `
       <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
         <input type="radio" name="bag" value="add" class="bag-radio">
-        <span class="font-semibold text-gray-800">Agregar bolsa (+ ${money(BAG_PRICE)})</span>
+        <span class="font-semibold text-gray-800">${m.addBagLabel || 'Agregar bolsa'} (+ ${money(bagPrice)})</span>
       </label>
     `;
-    note.innerHTML = isFamiliares
-      ? `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(BAG_PRICE)}</strong>. Se agregará <strong>1 bolsa por cada unidad</strong>.`
-      : `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(BAG_PRICE)}</strong>. Se agregará <strong>1 bolsa por pedido</strong>.`;
-  } else if (isAgregados) {
+    note.innerHTML = rule.perUnit
+      ? `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(bagPrice)}</strong>. Se agregará <strong>1 bolsa por cada unidad</strong>.`
+      : `* Esta categoría requiere agregar bolsa. Costo por bolsa: <strong>${money(bagPrice)}</strong>. Se agregará <strong>1 bolsa por pedido</strong>.`;
+  } else if (rule.note === 'optional' || currentCategory === 'agregados') {
     badge.textContent = 'Opcional';
     badge.className = 'text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-semibold';
     opts.innerHTML = `
       <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
         <input type="radio" name="bag" value="add" class="bag-radio">
-        <span class="font-semibold text-gray-800">Agregar bolsa (+ ${money(BAG_PRICE)})</span>
+        <span class="font-semibold text-gray-800">${m.addBagLabel || 'Agregar bolsa'} (+ ${money(bagPrice)})</span>
       </label>
       <label class="flex items-center gap-3 p-3 border-2 border-gray-300 rounded-lg hover:border-red-500 cursor-pointer bag-option">
         <input type="radio" name="bag" value="none" class="bag-radio">
-        <span class="font-semibold text-gray-800">Sin bolsa</span>
+        <span class="font-semibold text-gray-800">${m.noBagLabel || 'Sin bolsa'}</span>
       </label>
     `;
     note.textContent = `* La bolsa es opcional en esta categoría.`;
@@ -431,22 +483,25 @@ function computeLiveTotal() {
   if (!currentProduct) return { total: 0, bagQty: 0 };
   const base = currentProduct.price * productQuantity;
   let bagQty = 0;
-    // ✅ En bebidas y descartables no se suma bolsa
-  if (currentCategory === 'bebidas' || currentCategory === 'descartables') {
+  const optCfg = getCfgOptions();
+  const bagRules = optCfg.bagRules || {};
+  const rule = bagRules[currentCategory] || {};
+  const noBagCats = optCfg.noBagCategories || ['bebidas', 'descartables'];
+  const bagPrice = getBagPrice();
+
+  if (noBagCats.includes(currentCategory) || rule.hidden) {
     const total = base;
     const lt = document.getElementById('live-total');
     if (lt) lt.textContent = money(total);
     return { total, bagQty: 0 };
   }
 
-  if (currentCategory === 'ofertas-familiares') {
+  if (rule.perUnit) {
     bagQty = (bagChoice === 'add') ? productQuantity : 0;
-  } else if (['ofertas-dos', 'ofertas-personales', 'platos-extras'].includes(currentCategory)) {
-    bagQty = (bagChoice === 'add') ? 1 : 0;
-  } else if (currentCategory === 'agregados') {
+  } else if (rule.required || currentCategory === 'agregados') {
     bagQty = (bagChoice === 'add') ? 1 : 0;
   }
-  const total = base + (bagQty * BAG_PRICE);
+  const total = base + (bagQty * bagPrice);
   const lt = document.getElementById('live-total');
   if (lt) lt.textContent = money(total);
   return { total, bagQty };
@@ -675,6 +730,17 @@ document.addEventListener('click', (e) => {
   }
 }
 
+  // combo promocional con categoría
+  const comboLink = e.target.closest('.combo-btn[data-category]');
+  if (comboLink) {
+    e.preventDefault();
+    const cat = comboLink.dataset.category;
+    if (cat) {
+      renderProductsSingle(cat);
+      document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
 
   // abrir modal opciones
   if (e.target.classList.contains('add-to-cart')) {
@@ -699,7 +765,7 @@ document.addEventListener('click', (e) => {
   if (qEl) qEl.textContent = '1';
   document.querySelectorAll('.drink-radio').forEach(r => r.checked = false);
 
-  setDrinkVisible(currentCategory === 'ofertas-familiares');
+  setDrinkVisible((getCfgOptions().drinkRequiredCategories || ['ofertas-familiares']).includes(currentCategory));
   paintBagOptions();
   computeLiveTotal();
 
@@ -745,41 +811,40 @@ document.addEventListener('click', (e) => {
 
   // confirmar agregar
   if (e.target.id === 'confirm-add') {
-    if (currentCategory === 'ofertas-familiares' && !selectedDrink) {
-      showToast('⚠️ Debes seleccionar un sabor de bebida.');
+    const drinkRequired = getCfgOptions().drinkRequiredCategories || ['ofertas-familiares'];
+    const noBagCategories = getCfgOptions().noBagCategories || ['bebidas', 'descartables'];
+    const bagRules = getCfgOptions().bagRules || {};
+    const toasts = getCfgTexts().toasts || {};
+
+    if (drinkRequired.includes(currentCategory) && !selectedDrink) {
+      showToast(toasts.selectDrink || '⚠️ Debes seleccionar un sabor de bebida.');
       return;
     }
-    
-    // ✅ En bebidas y descartables NO se pide bolsa
- const noBagCategories = ['bebidas', 'descartables'];
 
-  if (!noBagCategories.includes(currentCategory)) {
-    const mustBag = currentCategory !== 'agregados';
-    if (mustBag && bagChoice !== 'add') {
-      showToast('⚠️ Debes agregar la bolsa (obligatorio).');
-      return;
+    if (!noBagCategories.includes(currentCategory)) {
+      const rule = bagRules[currentCategory] || {};
+      const mustBag = rule.required === true;
+      if (mustBag && bagChoice !== 'add') {
+        showToast(toasts.selectBag || '⚠️ Debes agregar la bolsa (obligatorio).');
+        return;
+      }
+      if (!rule.required && !bagChoice) { bagChoice = 'none'; }
+    } else {
+      bagChoice = 'none';
     }
-    if (currentCategory === 'agregados' && !bagChoice) { bagChoice = 'none'; }
-  } else {
-     bagChoice = 'none';
-  }
-
-    
-    
-
     const { total, bagQty } = computeLiveTotal();
 
     cart.push({
       name: currentProduct.name,
       price: currentProduct.price,
       qty: productQuantity,
-      drink: currentCategory === 'ofertas-familiares' ? selectedDrink : null,
+      drink: drinkRequired.includes(currentCategory) ? selectedDrink : null,
       bagQty,
       total
     });
 
     updateCartUI();
-    showToast('¡Producto agregado al carrito!');
+    showToast(getCfgTexts().toasts?.addedToCart || '¡Producto agregado al carrito!');
     const om = document.getElementById('options-modal');
     if (om) om.classList.remove('active');
     selectedDrink = null;
@@ -824,15 +889,14 @@ document.addEventListener('click', (e) => {
 
       // Botón "Realizar mi reserva" -> otra página web
       if (e.target.id === 'modal-reserva-go') {
-        // ⛔ IMPORTANTE: cambia esta URL por la página real de reservas
-        const urlReservas = 'https://pollon543.github.io/reservas-online-pollon-de-iquique/';
+        const urlReservas = getAppConfig().business?.reservasUrl || 'https://pollon543.github.io/reservas-online-pollon-de-iquique/';
         window.open(urlReservas, '_blank', 'noopener,noreferrer');
       }
 
-      // Botón "Solicitar con retiro" -> WhatsApp con mensaje predefinido
       if (e.target.id === 'modal-retiro-go') {
-        const msg = 'Solicito realizar mi pedido con retiro y confirmo que el monto mínimo de mi compra será igual o mayor a $100.000.';
-        const url = 'https://wa.me/51900979202?text=' + encodeURIComponent(msg);
+        const waCfg = getCfgWhatsapp();
+        const msg = waCfg.pickupMessage || '';
+        const url = `https://wa.me/${getWhatsappNumber()}?text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank', 'noopener,noreferrer');
       }
 
@@ -1018,7 +1082,10 @@ document.addEventListener('click', (e) => {
       const cust = order.customer || {};
       const phoneRaw = (cust.phone || '').replace(/\D/g, '');
       const to = phoneRaw || WHATSAPP_NUMBER;
-      let msg = `Hola ${cust.name || ''}, te escribimos de Pollería El Pollón respecto a tu pedido ${order.id} (${order.status}).`;
+      let msg = (getCfgWhatsapp().adminContactTemplate || 'Hola {name}, te escribimos de Pollería El Pollón respecto a tu pedido {id} ({status}).')
+        .replace('{name}', cust.name || '')
+        .replace('{id}', order.id || '')
+        .replace('{status}', order.status || '');
       const url = `https://wa.me/${to}?text=${encodeURIComponent(msg)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
@@ -1237,79 +1304,92 @@ if (viewCartDesktop) {
   });
 }
 
-// Carrusel infinito: 1 segundo por slide, bucle sin salto visible (clon de la 1ª imagen al final)
-const totalSlides = 10;
-const totalSlidesInDom = totalSlides + 1; // 11: 10 originales + clon de la primera
+// Carrusel infinito — inicializado tras cargar config
+let totalSlides = 10;
+let totalSlidesInDom = 11;
 let currentSlide = 0;
 let isResetting = false;
-const carouselContainer = document.getElementById('carousel-container');
-const carouselIndicators = document.getElementById('carousel-indicators');
-const CAROUSEL_INTERVAL_MS = 1000;
+let carouselInterval = null;
 
-function updateCarousel(useTransition = true) {
-  if (!carouselContainer) return;
-  if (!useTransition) {
-    carouselContainer.style.transition = 'none';
-  }
-  carouselContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
-  if (!useTransition) {
-    carouselContainer.offsetHeight; // reflow
-    carouselContainer.style.transition = '';
-  }
-  const activeIndex = currentSlide === totalSlides ? 0 : currentSlide;
-  if (carouselIndicators) {
-    const dots = carouselIndicators.querySelectorAll('.carousel-dot');
-    dots.forEach((dot, i) => {
-      const isActive = i === activeIndex;
-      dot.classList.toggle('active', isActive);
-      dot.setAttribute('aria-selected', isActive);
-    });
-  }
-}
+function initCarousel() {
+  const themeCfg = getAppConfig().theme || {};
+  totalSlides = window.POLLON_CAROUSEL_SLIDES || document.querySelectorAll('#carousel-container .carousel-slide').length - 1 || 10;
+  if (totalSlides < 1) totalSlides = 1;
+  totalSlidesInDom = totalSlides + 1;
+  currentSlide = 0;
+  isResetting = false;
 
-function goNext() {
-  if (isResetting) return;
-  currentSlide++;
-  if (currentSlide === totalSlides) {
+  const carouselContainer = document.getElementById('carousel-container');
+  const carouselIndicators = document.getElementById('carousel-indicators');
+  const intervalMs = themeCfg.carousel?.intervalMs || 1000;
+
+  function updateCarousel(useTransition = true) {
+    if (!carouselContainer) return;
+    if (!useTransition) carouselContainer.style.transition = 'none';
+    carouselContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+    if (!useTransition) {
+      carouselContainer.offsetHeight;
+      carouselContainer.style.transition = '';
+    }
+    const activeIndex = currentSlide === totalSlides ? 0 : currentSlide;
+    if (carouselIndicators) {
+      carouselIndicators.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+        const isActive = i === activeIndex;
+        dot.classList.toggle('active', isActive);
+        dot.setAttribute('aria-selected', isActive);
+      });
+    }
+  }
+
+  function goNext() {
+    if (isResetting) return;
+    currentSlide++;
+    if (currentSlide === totalSlides) {
+      updateCarousel(true);
+      isResetting = true;
+      return;
+    }
+    if (currentSlide >= totalSlidesInDom) {
+      currentSlide = 0;
+      updateCarousel(false);
+      return;
+    }
     updateCarousel(true);
-    isResetting = true;
-    return;
   }
-  if (currentSlide >= totalSlidesInDom) {
+
+  function onCarouselTransitionEnd() {
+    if (!isResetting || currentSlide !== totalSlides) return;
+    isResetting = false;
     currentSlide = 0;
     updateCarousel(false);
-    return;
   }
+
+  if (carouselContainer) {
+    carouselContainer.removeEventListener('transitionend', onCarouselTransitionEnd);
+    carouselContainer.addEventListener('transitionend', onCarouselTransitionEnd);
+  }
+
+  if (carouselInterval) clearInterval(carouselInterval);
+  carouselInterval = setInterval(goNext, intervalMs);
+
+  if (carouselIndicators) {
+    carouselIndicators.querySelectorAll('.carousel-dot').forEach((dot) => {
+      dot.replaceWith(dot.cloneNode(true));
+    });
+    carouselIndicators.querySelectorAll('.carousel-dot').forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const index = parseInt(dot.getAttribute('data-index'), 10);
+        if (Number.isNaN(index) || index < 0 || index >= totalSlides) return;
+        currentSlide = index;
+        updateCarousel(true);
+        clearInterval(carouselInterval);
+        carouselInterval = setInterval(goNext, intervalMs);
+      });
+    });
+  }
+
   updateCarousel(true);
 }
-
-function onCarouselTransitionEnd() {
-  if (!isResetting || currentSlide !== totalSlides) return;
-  isResetting = false;
-  currentSlide = 0;
-  updateCarousel(false);
-}
-
-if (carouselContainer) {
-  carouselContainer.addEventListener('transitionend', onCarouselTransitionEnd);
-}
-
-let carouselInterval = setInterval(goNext, CAROUSEL_INTERVAL_MS);
-
-if (carouselIndicators) {
-  carouselIndicators.querySelectorAll('.carousel-dot').forEach((dot) => {
-    dot.addEventListener('click', () => {
-      const index = parseInt(dot.getAttribute('data-index'), 10);
-      if (Number.isNaN(index) || index < 0 || index >= totalSlides) return;
-      currentSlide = index;
-      updateCarousel(true);
-      clearInterval(carouselInterval);
-      carouselInterval = setInterval(goNext, CAROUSEL_INTERVAL_MS);
-    });
-  });
-}
-
-updateCarousel(true);
 
 // --------- CATEGORÍAS: scrollbar solo cuando hay overflow, flechas y arrastre con mouse ----------
 (function initCategoriesScrollbar() {
@@ -1733,6 +1813,15 @@ function buildProductCardHTML(p, category) {
 }
 
 async function bootstrapApp() {
+  if (window.PollonConfigLoader?.init) {
+    window.PollonConfigLoader.init();
+    refreshCategoryConfig();
+  }
+
+  bindSidebarCategoryNav();
+  bindDesktopMenuNav();
+  initCarousel();
+
   await initOrdersBackend();
   loadOrders();
   if (window.PollonProducts) {
@@ -1758,10 +1847,11 @@ async function bootstrapApp() {
 
   const themeBtn = document.getElementById('admin-theme-toggle');
   if (themeBtn) {
+    const adminCfg = getAppConfig().admin?.panel || {};
     themeBtn.addEventListener('click', () => {
       document.getElementById('admin-panel-modal')?.classList.toggle('admin-dark');
       themeBtn.textContent = document.getElementById('admin-panel-modal')?.classList.contains('admin-dark')
-        ? '☀️ Modo claro' : '🌙 Modo oscuro';
+        ? (adminCfg.darkModeOff || '☀️ Modo claro') : (adminCfg.darkModeOn || '🌙 Modo oscuro');
     });
   }
 }
