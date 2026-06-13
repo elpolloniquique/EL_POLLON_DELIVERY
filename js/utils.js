@@ -77,6 +77,10 @@ window.PollonUtils = (function () {
     return flow[(idx + 1) % flow.length];
   }
 
+  function getBagPrice() {
+    return window.POLLON_CONFIG?.options?.bagPrice ?? 200;
+  }
+
   return {
     money,
     todayISO,
@@ -86,6 +90,7 @@ window.PollonUtils = (function () {
     estadoToLegacy,
     estadoFromLegacy,
     nextEstado,
-    BAG_PRICE: 200
+    getBagPrice,
+    get BAG_PRICE() { return getBagPrice(); }
   };
 })();

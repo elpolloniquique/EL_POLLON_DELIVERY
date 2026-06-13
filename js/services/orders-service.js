@@ -203,7 +203,12 @@
       const row = orderToPedido(order);
       const { error } = await sb.from('pedidos').upsert(row, { onConflict: 'id' });
       if (error) return Promise.reject(error);
-      await insertDetalle(sb, order.id, order.items);
+      try {
+        await sb.from('detalle_pedidos').delete().eq('pedido_id', order.id);
+        await insertDetalle(sb, order.id, order.items);
+      } catch (detErr) {
+        console.warn('[Pollón] detalle_pedidos:', detErr.message || detErr);
+      }
       return;
     }
 

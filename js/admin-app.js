@@ -406,9 +406,20 @@
 
   async function loadConfig() {
     const client = sb();
-    if (!client) return;
-    const { data } = await client.from('configuracion_tienda').select('*').eq('id', 1).maybeSingle();
-    if (!data) return;
+    if (!client) {
+      prefillConfigFromFiles();
+      return;
+    }
+    const { data, error } = await client.from('configuracion_tienda').select('*').eq('id', 1).maybeSingle();
+    if (error) {
+      console.warn('[Pollón] configuracion_tienda:', error.message);
+      prefillConfigFromFiles();
+      return;
+    }
+    if (!data) {
+      prefillConfigFromFiles();
+      return;
+    }
     document.getElementById('cfg-nombre').value = data.nombre_tienda || '';
     document.getElementById('cfg-telefono').value = data.telefono || '';
     document.getElementById('cfg-whatsapp').value = data.whatsapp || '';
@@ -419,19 +430,55 @@
     document.getElementById('cfg-reservas').checked = data.reservas_activas !== false;
   }
 
+  function prefillConfigFromFiles() {
+    const b = window.POLLON_CONFIG?.business || {};
+    const w = window.POLLON_CONFIG?.whatsapp || {};
+    const d = window.POLLON_CONFIG?.delivery || {};
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val != null && val !== '') el.value = val;
+    };
+    set('cfg-nombre', b.shortName || b.name);
+    set('cfg-telefono', b.phone);
+    set('cfg-whatsapp', w.ordersNumber);
+    set('cfg-direccion', b.address);
+    set('cfg-horario', b.schedule);
+    set('cfg-mensaje', w.pickupMessage || '');
+    const del = document.getElementById('cfg-delivery');
+    const res = document.getElementById('cfg-reservas');
+    if (del) del.checked = d.enabled !== false;
+    if (res) res.checked = d.reservations?.enabled !== false;
+  }
+
   async function saveConfig() {
-    const client = sb();
-    if (!client) return;
-    const { error } = await client.from('configuracion_tienda').update({
-      nombre_tienda: document.getElementById('cfg-nombre').value,
-      telefono: document.getElementById('cfg-telefono').value,
-      whatsapp: document.getElementById('cfg-whatsapp').value,
-      direccion: document.getElementById('cfg-direccion').value,
-      horario: document.getElementById('cfg-horario').value,
-      mensaje_cliente: document.getElementById('cfg-mensaje').value,
+    const payload = {
+      nombre_tienda: document.getElementById('cfg-nombre').value.trim(),
+      telefono: document.getElementById('cfg-telefono').value.trim(),
+      whatsapp: document.getElementById('cfg-whatsapp').value.trim(),
+      direccion: document.getElementById('cfg-direccion').value.trim(),
+      horario: document.getElementById('cfg-horario').value.trim(),
+      mensaje_cliente: document.getElementById('cfg-mensaje').value.trim(),
       delivery_activo: document.getElementById('cfg-delivery').checked,
       reservas_activas: document.getElementById('cfg-reservas').checked
-    }).eq('id', 1);
+    };
+
+    if (window.PollonStoreConfig?.saveStoreRow) {
+      try {
+        await window.PollonStoreConfig.saveStoreRow(payload);
+        toast('Configuración guardada en Supabase');
+        return;
+      } catch (e) {
+        toast('Error Supabase: ' + (e.message || e));
+        return;
+      }
+    }
+
+    const client = sb();
+    if (!client) {
+      toast('Supabase no disponible — edita config/business.js');
+      return;
+    }
+    const { error } = await client.from('configuracion_tienda').upsert({ id: 1, ...payload }, { onConflict: 'id' });
     if (error) toast('Error: ' + error.message);
     else toast('Configuración guardada');
   }
@@ -496,6 +543,10 @@
   async function init() {
     const authed = await Auth.requireAuth('login.html');
     if (!authed) return;
+
+    if (window.PollonStoreConfig?.load) {
+      await window.PollonStoreConfig.load();
+    }
 
     const profile = Auth.getProfile();
     document.getElementById('admin-user-info').textContent =

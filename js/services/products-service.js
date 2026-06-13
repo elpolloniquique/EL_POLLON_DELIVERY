@@ -76,7 +76,7 @@
   }
 
   async function loadProducts() {
-    const fallback = window.POLLON_FALLBACK_PRODUCTS || {};
+    const fallback = window.POLLON_CONFIG?.products || window.POLLON_FALLBACK_PRODUCTS || {};
     catalog = JSON.parse(JSON.stringify(fallback));
     loadedFrom = 'fallback';
 
@@ -113,7 +113,19 @@
   }
 
   function getCatalog() {
-    return catalog || window.POLLON_FALLBACK_PRODUCTS || {};
+    return catalog || window.POLLON_CONFIG?.products || window.POLLON_FALLBACK_PRODUCTS || {};
+  }
+
+  async function loadCategories() {
+    const sb = window.PollonSupabase?.getClient?.();
+    if (!sb || !window.PollonSupabase?.isConfigured?.()) return [];
+    const { data, error } = await sb
+      .from('categorias')
+      .select('id, slug, nombre, imagen_url, orden, activo')
+      .eq('activo', true)
+      .order('orden', { ascending: true });
+    if (error) throw error;
+    return data || [];
   }
 
   async function adminListAll() {
@@ -173,6 +185,7 @@
     loadProducts,
     getCatalog,
     getSource: () => loadedFrom,
+    loadCategories,
     adminListAll,
     adminUpsert,
     adminDelete,

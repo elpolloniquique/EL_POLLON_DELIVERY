@@ -318,17 +318,18 @@
       ul.innerHTML = modalCfg.requirements.map(s => `<li>${s}</li>`).join('');
     }
 
-    const footnote = modal.querySelector('p.text-xs.text-gray-500');
-    if (footnote) {
-      if (modalId === 'modal-delivery' && deliveryCfg?.costNote) {
-        footnote.textContent = `* Recuerda que el delivery tiene un costo adicional según tu zona (${deliveryCfg.costNote}).`;
-      } else if (modalCfg.note || deliveryCfg?.reservations?.note) {
-        footnote.textContent = '* ' + (modalCfg.note || deliveryCfg.reservations.note);
-      }
+    const footnotes = modal.querySelectorAll('p.text-xs.text-gray-500');
+    const footnote = footnotes.length ? footnotes[footnotes.length - 1] : null;
+    if (footnote && modalId === 'modal-delivery' && deliveryCfg?.costNote) {
+      footnote.textContent = `* Recuerda que el delivery tiene un costo adicional según tu zona (${deliveryCfg.costNote}).`;
+    } else if (footnote && modalId === 'modal-reservas' && deliveryCfg?.reservations?.note) {
+      footnote.textContent = '* ' + deliveryCfg.reservations.note;
+    } else if (footnote && modalId === 'modal-retiros' && deliveryCfg?.pickup?.note) {
+      footnote.textContent = '* ' + deliveryCfg.pickup.note;
     }
 
-    const cta = modal.querySelector('button[id^="modal-"]');
-    if (cta && modalCfg.cta) cta.textContent = modalCfg.cta;
+    const ctaGo = modal.querySelector('#modal-reserva-go, #modal-retiro-go');
+    if (ctaGo && modalCfg.cta) ctaGo.textContent = modalCfg.cta;
   }
 
   function setModalContent(modalId, selector, text) {

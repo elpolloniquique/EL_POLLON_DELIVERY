@@ -41,8 +41,6 @@ function getCategoryOrder() {
 
 let CATEGORY_META = getCategoryMeta();
 let CATEGORY_ORDER = getCategoryOrder();
-const BAG_PRICE = getBagPrice();
-const WHATSAPP_NUMBER = getWhatsappNumber();
 
 // ======================= SUPABASE BACKEND =========================
 // Pedidos y menú vía Supabase (ver supabase/schema.sql y js/supabase/config.js)
@@ -123,7 +121,7 @@ function loadOrders() {
 let products = window.POLLON_FALLBACK_PRODUCTS ? JSON.parse(JSON.stringify(window.POLLON_FALLBACK_PRODUCTS)) : {};
 let menuSearchTerm = '';
 
-function refreshCategoryConfig() {
+function refreshRuntimeConfig() {
   CATEGORY_META = getCategoryMeta();
   CATEGORY_ORDER = getCategoryOrder();
 }
@@ -954,7 +952,7 @@ document.addEventListener('click', (e) => {
         if (err) err.classList.add('hidden');
         const lm = document.getElementById('admin-login-modal');
         if (lm) lm.classList.remove('active');
-        showToast('✅ Acceso concedido al panel de administración.');
+          showToast(getCfgTexts().toasts?.adminAccess || '✅ Acceso concedido al panel de administración.');
         openAdminPanelModal();
       } else if (err) err.classList.remove('hidden');
     };
@@ -1081,7 +1079,7 @@ document.addEventListener('click', (e) => {
     if (order) {
       const cust = order.customer || {};
       const phoneRaw = (cust.phone || '').replace(/\D/g, '');
-      const to = phoneRaw || WHATSAPP_NUMBER;
+      const to = phoneRaw || getWhatsappNumber();
       let msg = (getCfgWhatsapp().adminContactTemplate || 'Hola {name}, te escribimos de Pollería El Pollón respecto a tu pedido {id} ({status}).')
         .replace('{name}', cust.name || '')
         .replace('{id}', order.id || '')
@@ -1170,12 +1168,12 @@ if (checkoutForm) {
         .then(() => {
           orders.push(order);
           const rawMsg = buildWhatsappTextFromOrder(order);
-          window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
+          window.open(`https://wa.me/${getWhatsappNumber()}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
           cart = [];
           updateCartUI();
           document.getElementById('checkout-modal')?.classList.remove('active');
           e.target.reset();
-          showToast('✅ ¡Pedido enviado a WhatsApp y guardado en la base de datos!');
+          showToast(getCfgWhatsapp().checkout?.successBackend || '✅ ¡Pedido enviado a WhatsApp y guardado en la base de datos!');
           if (document.getElementById('admin-panel-modal')?.classList.contains('active')) {
             renderAdminPanel();
           }
@@ -1185,7 +1183,7 @@ if (checkoutForm) {
           orders.push(order);
           try { localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); } catch (_) {}
           const rawMsg = buildWhatsappTextFromOrder(order);
-          window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
+          window.open(`https://wa.me/${getWhatsappNumber()}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
           cart = [];
           updateCartUI();
           document.getElementById('checkout-modal')?.classList.remove('active');
@@ -1193,13 +1191,13 @@ if (checkoutForm) {
           if (document.getElementById('admin-panel-modal')?.classList.contains('active')) {
             renderAdminPanel();
           }
-          showToast('⚠️ Pedido enviado a WhatsApp. Guardado localmente (revisa Supabase en js/supabase/config.js).');
+          showToast(getCfgWhatsapp().checkout?.successFallback || '⚠️ Pedido enviado a WhatsApp. Guardado localmente (revisa Supabase en js/supabase/config.js).');
         });
     } else {
       orders.push(order);
       saveOrders();
       const rawMsg = buildWhatsappTextFromOrder(order);
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/${getWhatsappNumber()}?text=${encodeURIComponent(rawMsg)}`, '_blank', 'noopener,noreferrer');
       cart = [];
       updateCartUI();
       document.getElementById('checkout-modal')?.classList.remove('active');
@@ -1207,7 +1205,7 @@ if (checkoutForm) {
       if (document.getElementById('admin-panel-modal')?.classList.contains('active')) {
         renderAdminPanel();
       }
-      showToast('✅ ¡Pedido enviado a WhatsApp y registrado!');
+      showToast(getCfgWhatsapp().checkout?.successLocal || '✅ ¡Pedido enviado a WhatsApp y registrado!');
     }
   });
 }
@@ -1813,23 +1811,38 @@ function buildProductCardHTML(p, category) {
 }
 
 async function bootstrapApp() {
+  // 1) Config remota Supabase sobrescribe archivos config/*.js
+  if (window.PollonStoreConfig?.load) {
+    const remote = await window.PollonStoreConfig.load();
+    if (remote.ok) console.info('[Pollón] Config tienda sincronizada desde Supabase');
+  }
+
+  // 2) Aplicar config al DOM
   if (window.PollonConfigLoader?.init) {
     window.PollonConfigLoader.init();
-    refreshCategoryConfig();
+    refreshRuntimeConfig();
   }
 
   bindSidebarCategoryNav();
   bindDesktopMenuNav();
-  initCarousel();
 
   await initOrdersBackend();
   loadOrders();
+
   if (window.PollonProducts) {
     const result = await window.PollonProducts.loadProducts();
     products = result.products || products;
+    if (window.PollonStoreConfig?.syncCategoryOrderFromProducts) {
+      window.PollonStoreConfig.syncCategoryOrderFromProducts(products);
+      refreshRuntimeConfig();
+    }
     const src = window.PollonProducts.getSource();
-    if (src === 'supabase') console.info('[Pollón] Menú cargado desde Supabase');
+    if (src === 'supabase' || src === 'supabase-legacy') {
+      console.info('[Pollón] Menú cargado desde Supabase (' + src + ')');
+    }
   }
+
+  initCarousel();
   renderProductsAll();
   currentCategory = 'todo-el-menu';
   buildSidebarGallery();
